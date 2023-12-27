@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class=" pt-4 z-0 inset-0 flex items-center justify-center bg-gray-900">
+<div class="pt-4 z-0 inset-0 flex items-center justify-center bg-gray-900">
   <div class="w-full max-w-md p-6 bg-gray-800 rounded-lg shadow-lg mx-4">
     <h2 class="text-2xl font-semibold text-white">Register</h2>
     <hr class="border-t border-gray-600 my-4">
@@ -10,35 +10,48 @@
 
       <!-- First Name -->
       <div class="mb-2">
-        <label for="first_name" class="block text-white">First Name</label>
-        <input type="text" id="first_name" name="first_name" required class="w-full py-2 px-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <label for="{{ form.first_name.id_for_label }}" class="block text-white">First Name</label>
+        <input type="text" id="{{ form.first_name.id_for_label }}" name="{{ form.first_name.name }}" value="{% if form.first_name.value %}{{ form.first_name.value }}{% endif %}" required class="w-full py-2 px-3 bg-gray-700 border {% if form.first_name.errors %}border-red-500{% else %}border-gray-600{% endif %} text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        {% if form.first_name.errors %}
+          <div class="mt-2 text-sm text-left text-red-500">{{ form.first_name.errors }}</div>
+        {% endif %}
       </div>
 
       <!-- Last Name -->
       <div class="mb-2">
-        <label for="last_name" class="block text-white">Last Name</label>
-        <input type="text" id="last_name" name="last_name" required class="w-full py-2 px-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <label for="{{ form.last_name.id_for_label }}" class="block text-white">Last Name</label>
+        <input type="text" id="{{ form.last_name.id_for_label }}" name="{{ form.last_name.name }}" value="{% if form.last_name.value %}{{ form.last_name.value }}{% endif %}" required class="w-full py-2 px-3 bg-gray-700 border {% if form.last_name.errors %}border-red-500{% else %}border-gray-600{% endif %} text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        {% if form.last_name.errors %}
+          <div class="mt-2 text-sm text-left text-red-500">{{ form.last_name.errors }}</div>
+        {% endif %}
       </div>
       
       <!-- Email -->
       <div class="mb-2 mt-4">
-        <label for="email" class="block text-white">Email</label>
-        <input type="email" id="email" name="email" value="{% if inactive_user_email != None %}{{inactive_user_email}}{% endif %}" required class="w-full py-2 px-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" autofocus>
+        <label for="{{ form.email.id_for_label }}" class="block text-white">Email</label>
+        <input type="email" id="{{ form.email.id_for_label }}" name="{{ form.email.name }}" value="{% if form.email.value %}{{ form.email.value }}{% endif %}" required class="w-full py-2 px-3 bg-gray-700 border {% if form.email.errors %}border-red-500{% else %}border-gray-600{% endif %} text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" autofocus>
+        {% if form.email.errors %}
+          <div class="mt-2 text-sm text-left text-red-500">{{ form.email.errors }}</div>
+        {% endif %}
       </div>
       
       <!-- Password -->
       <div class="mb-2 mt-4">
-        <label for="password1" class="block text-white">Password</label>
-        <input type="password" id="password1" name="password1" required class="w-full py-2 px-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <label for="{{ form.password1.id_for_label }}" class="block text-white">Password</label>
+        <input type="password" id="{{ form.password1.id_for_label }}" name="{{ form.password1.name }}" required class="w-full py-2 px-3 bg-gray-700 border {% if form.password1.errors %}border-red-500{% else %}border-gray-600{% endif %} text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        {% if form.password1.errors %}
+          <div class="mt-2 text-sm text-left text-red-500">{{ form.password1.errors }}</div>
+        {% endif %}
       </div>
       
       <!-- Confirm Password -->
       <div class="mb-2">
-        <label for="password2" class="block text-white">Confirm Password</label>
-        <input type="password" id="password2" name="password2" required class="w-full py-2 px-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <label for="{{ form.password2.id_for_label }}" class="block text-white">Confirm Password</label>
+        <input type="password" id="{{ form.password2.id_for_label }}" name="{{ form.password2.name }}" required class="w-full py-2 px-3 bg-gray-700 border {% if form.password2.errors %}border-red-500{% else %}border-gray-600{% endif %} text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        {% if form.password2.errors %}
+          <div class="mt-2 text-sm text-left text-red-500">{{ form.password2.errors }}</div>
+        {% endif %}
       </div>
-
-      
 
       <!-- Use the same button classes and margin as the login page -->
       <button type="submit" class="bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none text-white focus:ring-blue-300 font-medium rounded-lg w-full text-lg px-5 py-2.5 text-center mt-8 mb-4">Register</button>
