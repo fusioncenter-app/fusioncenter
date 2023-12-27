@@ -3,7 +3,7 @@
     {% if grouped_sessions %}
         {% for date, sessions in grouped_sessions.items %}
             <div class="pb-4">
-                <h4 class="text-lg font-bold text-white mb-2">{{ date|date:"D d M" }}</h4>
+                <h4 class="text-lg font-bold text-white mb-2">{{ date|date:"D d M y" }}</h4>
                 {% for session in sessions %}
                     <a class="mb-2 flex items-center bg-white border border-gray-200 rounded-lg shadow flex-row hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700">
                         <div class="flex flex-col justify-between md:p-4 pl-2 leading-normal ">
