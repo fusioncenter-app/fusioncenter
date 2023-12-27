@@ -391,6 +391,7 @@ def update_attendance(request, participant_id):
 @login_required(login_url='login')
 def user_session_registration(request, session_id, user_plan_id):
 
+
     # Get the referring URL
     referring_url = request.META.get('HTTP_REFERER', None)
     referring_url_parts = urlparse(referring_url)
@@ -398,10 +399,11 @@ def user_session_registration(request, session_id, user_plan_id):
     # Extract numeric part from the path using a regular expression
     match = re.search(r'/(\d+)/$', referring_url_parts.path)
     if match:
-        numeric_part = match.group(1)
+        user_plan_id = match.group(1)
     else:
-        numeric_part = user_plan_id
+        user_plan_id = user_plan_id
 
+    # print(user_plan_id)
 
     user = request.user
 
@@ -412,28 +414,23 @@ def user_session_registration(request, session_id, user_plan_id):
     session = get_object_or_404(Session, id=session_id)
 
     plan_pricing = user_plan.plan_pricing
-    # print(plan_pricing.plan.plan_type)
+
     # Validate if the plan pricing associated with the user plan has the same activity related to the session
     activity_id_of_session = session.activity_id
     if not plan_pricing.plan.activities.filter(id=activity_id_of_session).exists():
         messages.error(request, 'User plan pricing does not match the activity of the session.')
-        return redirect('participant_plan_pricing_sessions', plan_pricing_id=numeric_part)
+        return redirect('participant_plan_pricing_sessions', user_plan_id=user_plan_id)
 
     # Validate if the plan pricing is still valid based on from_date and to_date
     if not plan_pricing.from_date <= session.date <= plan_pricing.to_date:
         messages.error(request, 'User plan pricing is not valid for the current date.')
-        return redirect('participant_plan_pricing_sessions', plan_pricing_id=numeric_part)
-
-    # Check if the plan is a limited plan
-    # if user_plan.plan_pricing.plan.plan_type != 'limited':
-    #     messages.warning(request, 'Only limited plans are allowed for session registration.')
-    #     return redirect('participant_plan_pricing_sessions', plan_pricing_id=numeric_part)
+        return redirect('participant_plan_pricing_sessions', user_plan_id=user_plan_id)
 
     # Check if the user has sessions left
     if user_plan.plan_pricing.plan.plan_type == 'limited':
         if user_plan.sessions_left <= 0:
             messages.warning(request, 'You have no sessions left in your plan.')
-            return redirect('participant_plan_pricing_sessions', plan_pricing_id=numeric_part)
+            return redirect('participant_plan_pricing_sessions', user_plan_id=user_plan_id)
         else:
             # Count registered, absent, and present participants for the session
             registered_count = Participants.objects.filter(session=session, assistance_status='registered').count()
@@ -446,7 +443,7 @@ def user_session_registration(request, session_id, user_plan_id):
             # Check if the session is already full
             if total_participants >= session.session_capacity:
                 messages.warning(request, 'Sorry, the session is already full. You cannot register.')
-                return redirect('participant_plan_pricing_sessions', plan_pricing_id=numeric_part)
+                return redirect('participant_plan_pricing_sessions', user_plan_id=user_plan_id)
 
     # Check if a participant instance already exists for the user and session
     existing_participant = Participants.objects.filter(user=user, session=session).first()
@@ -459,15 +456,15 @@ def user_session_registration(request, session_id, user_plan_id):
 
         if timezone.now() < allowed_status_change_time:
             existing_participant.assistance_status = 'registered'
+            if existing_participant.user_plan.plan_pricing.plan.plan_type == 'limited':
+                existing_participant.user_plan = get_object_or_404(UserPlan, id=user_plan_id)
+            print(existing_participant.user_plan.id)
             existing_participant.save()
             messages.success(request, 'Participant status changed to registered successfully.')
-            return redirect('participant_plan_pricing_sessions', plan_pricing_id=numeric_part)
+            return redirect('participant_plan_pricing_sessions', user_plan_id=user_plan_id)
         else:
             messages.warning(request, 'You can not register again if you cancelled a session and the actual time is later than 2 hours before starting.')
-            return redirect('participant_plan_pricing_sessions', plan_pricing_id=numeric_part)
-    
-
-
+            return redirect('participant_plan_pricing_sessions', user_plan_id=user_plan_id)
 
     # Create the participant instance
     Participants.objects.create(
@@ -478,17 +475,15 @@ def user_session_registration(request, session_id, user_plan_id):
         # Add other fields as needed
     )
 
-    # Decrement the sessions left for the user plan
-    # user_plan.sessions_left -= 1
-    # user_plan.save()
-
     messages.success(request, 'Participant created successfully.')
 
     # Redirect to 'plan_pricing_sessions' with plan_pricing_id parameter
-    return redirect(reverse('participant_plan_pricing_sessions', kwargs={'plan_pricing_id': plan_pricing.id}))
+    return redirect(reverse('participant_plan_pricing_sessions', kwargs={'user_plan_id':user_plan_id}))
 
 @login_required(login_url='login')
 def user_session_cancellation(request, session_id, user_plan_id):
+
+    original_user_plan = user_plan_id
 
     # Get the referring URL
     referring_url = request.META.get('HTTP_REFERER', None)
@@ -497,10 +492,9 @@ def user_session_cancellation(request, session_id, user_plan_id):
     # Extract numeric part from the path using a regular expression
     match = re.search(r'/(\d+)/$', referring_url_parts.path)
     if match:
-        numeric_part = match.group(1)
+        user_plan_id = match.group(1)
     else:
-        numeric_part = user_plan_id
-
+        user_plan_id = user_plan_id
 
     user = request.user
 
@@ -516,18 +510,13 @@ def user_session_cancellation(request, session_id, user_plan_id):
     activity_id_of_session = session.activity_id
     if not plan_pricing.plan.activities.filter(id=activity_id_of_session).exists():
         messages.error(request, 'User plan pricing does not match the activity of the session.')
-        return redirect('participant_plan_pricing_sessions', plan_pricing_id=numeric_part)
-
-    # Check if the plan is a limited plan
-    # if user_plan.plan_pricing.plan.plan_type != 'limited':
-    #     messages.warning(request, 'Only limited plans are allowed for session cancellation.')
-    #     return redirect('participant_plan_pricing_sessions', plan_pricing_id=numeric_part)
+        return redirect('participant_plan_pricing_sessions', user_plan_id=user_plan_id)
 
     # Check if a participant instance already exists for the user and session
     participant = Participants.objects.filter(user=user, session=session).first()
     if not participant:
         messages.warning(request, 'You are not registered for this session.')
-        return redirect('participant_plan_pricing_sessions', plan_pricing_id=numeric_part)
+        return redirect('participant_plan_pricing_sessions', user_plan_id=user_plan_id)
 
     # Check if there are more than 2 hours left for the session to start
     current_datetime = datetime.now()
@@ -536,7 +525,7 @@ def user_session_cancellation(request, session_id, user_plan_id):
 
     if time_difference.total_seconds() < 2 * 60 * 60:  # 2 hours in seconds
         messages.warning(request, 'You cannot cancel the session as there are less than 2 hours left to start.')
-        return redirect('participant_plan_pricing_sessions', plan_pricing_id=numeric_part)
+        return redirect('participant_plan_pricing_sessions', user_plan_id=user_plan_id)
 
     # Check if there are participant instances with "present" or "absent" status
     existing_present_absent_participants = Participants.objects.filter(
@@ -547,7 +536,7 @@ def user_session_cancellation(request, session_id, user_plan_id):
 
     if existing_present_absent_participants.exists():
         messages.warning(request, 'Cannot cancel registration when participants have "present" or "absent" status.')
-        return redirect('participant_plan_pricing_sessions', plan_pricing_id=numeric_part)
+        return redirect('participant_plan_pricing_sessions', user_plan_id=user_plan_id)
 
     # Update the assistance status to 'cancelled'
     participant.assistance_status = 'cancelled'
@@ -556,7 +545,7 @@ def user_session_cancellation(request, session_id, user_plan_id):
     messages.success(request, 'Session cancellation successful.')
 
     # Redirect to 'plan_pricing_sessions' with plan_pricing_id parameter
-    return redirect(reverse('participant_plan_pricing_sessions', kwargs={'plan_pricing_id': numeric_part}))
+    return redirect(reverse('participant_plan_pricing_sessions', kwargs={'user_plan_id':user_plan_id}))
 
 @login_required(login_url='login')
 @user_passes_test(lambda u: is_institution_owner(u), login_url='login')

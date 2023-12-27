@@ -24,7 +24,7 @@ urlpatterns = [
     # participant urls
     path('participant_plan_list/', participant_plan_list, name='participant_plan_list'),
     path('participant_plan_detail/<int:plan_id>/', participant_plan_detail, name='participant_plan_detail'),
-    path('session_list/<int:plan_pricing_id>/', participant_plan_pricing_sessions, name='participant_plan_pricing_sessions'),
+    path('session_list/<int:user_plan_id>/', participant_plan_pricing_sessions, name='participant_plan_pricing_sessions'),
     path('plan_pricing_session_list/<int:plan_pricing_id>/', plan_pricing_session_list, name='plan_pricing_session_list'),
     
 

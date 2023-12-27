@@ -395,28 +395,20 @@ def participant_plan_detail(request, plan_id):
     # Get all plan pricings assigned to the user for the specified plan
     user_plan_pricings = PlanPricing.objects.filter(userplan__in=user_plans)
 
-    # Create a list to store PlanPricing instances with appended userplan
-    user_plan_pricings_with_userplan = []
-
-    # Append userplan to each PlanPricing instance
-    for plan_pricing in user_plan_pricings:
-        user_plan = UserPlan.objects.get(user=request.user, plan_pricing=plan_pricing)
-        plan_pricing.userplan = user_plan
-        user_plan_pricings_with_userplan.append(plan_pricing)
-
     context = {
         'plan': plan,
-        'user_plan_pricings': user_plan_pricings_with_userplan,
+        'user_plans': user_plans,
     }
 
     return render(request, 'participant/plan_detail.html', context)
 
 @login_required(login_url='login')
-def participant_plan_pricing_sessions(request, plan_pricing_id):
-    # Get the PlanPricing object
-    plan_pricing = get_object_or_404(PlanPricing, id=plan_pricing_id)
+def participant_plan_pricing_sessions(request, user_plan_id):
+    # Get the UserPlan object
+    user_plan = get_object_or_404(UserPlan, user=request.user, id=user_plan_id)
 
-    user_plan = UserPlan.objects.filter(user=request.user, plan_pricing=plan_pricing_id).first()
+    # Get the PlanPricing object associated with the UserPlan
+    plan_pricing = user_plan.plan_pricing
 
     # Get the related plan activities
     plan_activities = plan_pricing.plan.activities.all()
@@ -433,21 +425,16 @@ def participant_plan_pricing_sessions(request, plan_pricing_id):
         availability=F('session_capacity') - F('total_participants')
     ).order_by('date')
 
-
     for session in sessions:
-        # print(session.id)
         participant = Participants.objects.filter(user=request.user, session=session).first()
         session.assistance_status = participant.assistance_status if participant else None
         session.session_user_plan_id = participant.user_plan.id if participant else user_plan.id
-        # print(session.id,participant.id,session.session_user_plan_id)
-    
-    
 
     context = {
         'plan_pricing': plan_pricing,
         'sessions': sessions,
-        'user_plan':user_plan,
-        'today':date.today(),
+        'user_plan': user_plan,
+        'today': date.today(),
     }
 
     return render(request, 'participant/session_list.html', context)
