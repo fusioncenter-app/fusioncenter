@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div>
+    <h1 class="text-white">Welcome to Your Website</h1>
+    <p class="text-white">This is the ABOUT page of your website.</p>
+    {% for group in user.groups.all %}
+        {% if group.name == 'InstitutionOwner' %}
+            <p class="text-white">User is in the 'InstitutionOwner' group.</p>
+        {% endif %}
+    {% endfor %}
+</div>
+{% endblock %}

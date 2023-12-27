@@ -1,0 +1,21 @@
+
+    <td id="status-cell-{{ participant.id }}"  class="px-3 py-4 text-center flex justify-center items-center">
+        <span class="w-3 h-3 mx-1 {% if participant.assistance_status == 'present' %}bg-green-500{% endif %}
+                            {% if participant.assistance_status == 'cancelled' %}bg-red-500{% endif %}
+                            {% if participant.assistance_status == 'absent' %}bg-blue-500{% endif %}
+                            rounded-full inline-block"></span>
+        <span class="ml-1">{{ participant.assistance_status|capfirst }}</span>
+    </td>
+
+    <a id="assistance_icon" href="#" class="ml-2 text-red-500 hover:underline" 
+        hx-get="{% url 'update_attendance' participant.id %}" 
+        hx-swap="outerHTML" 
+        hx-target="#status-cell-{{ participant.id }}" 
+        hx-indicator="#status-cell-{{ participant.id }}" 
+        hx-trigger="click"
+        hx-swap-oob="true">
+
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+    </a>

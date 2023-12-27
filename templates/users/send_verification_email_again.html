@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="fixed z-0 inset-0 flex items-center justify-center bg-gray-900">
+  <div class="w-full max-w-md p-6 bg-gray-800 rounded-lg shadow-lg mx-4">
+    <h2 class="text-2xl font-semibold mb-4 text-white">Email for Verification Sent</h2>
+    <hr class="border-t border-gray-600 mb-4">
+       <p class="text-white mt-4">{% if success_message %}
+        {{ success_message }}
+      {% endif %} If you've already activated your account, you can <a href="{% url 'login' %}" class="text-blue-400 hover:underline">login here</a>.</p>
+      <p class="text-white mt-4">Didn't receive your email?</p>
+      <form method="post" class="mt-4">
+      {% csrf_token %}
+      <button type="submit" class="bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none text-white focus:ring-blue-300 font-medium rounded-lg w-full text-lg px-5 py-2.5 text-center">Resend Verification Email</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

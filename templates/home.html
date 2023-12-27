@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block style %}
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        background-repeat: no-repeat;
+        background-size: cover;
+        background-position: center;
+        position: relative;
+    }
+
+    .hero-section {
+        height: calc(100vh - 64px); /* Subtract the navbar height */
+        display: flex;
+        background-image: url('{% static 'hero_image.jpeg' %}');
+        background-size: cover; /* Adjust the background size */
+        background-position: center center; /* Center the background image */
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        text-align: center;
+        padding: 0 20px; /* Adjust as needed */
+        position: relative;
+        top: 0; /* Align with the top of the viewport */
+        z-index: 1; /* Ensure the hero section is above other elements */
+    }
+</style>
+{% endblock %}
+
+
+
+
+
+{% block content %}
+<section class="hero-section">
+    <div class="">
+        <h1 class="mb-4 text-5xl font-extrabold tracking-tight leading-none md:text-5xl lg:text-6xl">Connect, Learn, Dance</h1>
+        <p class="mb-4 mt-12 text-xl font-thin text-gray-200 lg:text-2xl sm:px-16 xl:px-48">
+            Transforming Institutions into Dance Hubs    
+        </p>
+        <p class="my-12 text-xl font-thin text-gray-200 lg:text-xl sm:px-16 xl:px-48">
+            Revolutionize Dance Education: </br>Join as an Institution Owner </br>on Our Global Platform   
+        </p>
+        <div class="flex flex-col mb-8 lg:mb-16 space-y-4 sm:flex-row sm:justify-center sm:space-y-0 sm:space-x-4">
+            <a href="{% url 'explore_page' %}" class="inline-flex justify-center items-center py-3 px-5 text-base font-medium text-center text-white rounded-lg border border-white focus:ring-4 hover:bg-gray-700 focus:ring-gray-800">
+                <div class="inline-flex">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mt-1">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                    </svg>
+                    <div class="ml-2">
+                      Explore Sessions
+    
+                    </div>
+                    
+                  </div>
+            </a>  
+        </div>
+    </div>
+</section>
+<section class="bg-gray-900">
+    <div class="py-8 px-4 mx-auto max-w-screen-xl lg:py-16 lg:px-6">
+        <div class="mx-auto max-w-screen-md text-center mb-8 lg:mb-12">
+            <h2 class="mb-4 text-4xl tracking-tight font-extrabold text-white">Elevate Your Dance Academy with Our Platform</h2>
+            <!-- <p class="mb-5 font-light  sm:text-xl text-gray-400">Here at Flowbite we focus on markets where technology, innovation, and capital can unlock long-term value and drive economic growth.</p> -->
+        </div>
+        <div class="space-y-8 lg:grid lg:grid-cols-3 sm:gap-6 xl:gap-10 lg:space-y-0">
+            <!-- Pricing Card -->
+            <div class="flex flex-col p-6 mx-auto max-w-lg text-center text-white bg-gray-800 rounded-lg border border-gray-600 shadow  xl:p-8 ">
+                <h3 class="mb-4 text-2xl font-semibold">Effortless Administration</h3>
+                <p class="font-light  sm:text-lg text-gray-400">Manage payments, attendance, and participant plans seamlessly. Our platform simplifies administrative tasks, giving you more time to focus on the art of dance.</p>
+            </div>
+            <!-- Pricing Card -->
+            <div class="flex flex-col p-6 mx-auto max-w-lg text-center text-white bg-gray-800 rounded-lg border border-gray-600 shadow  xl:p-8 ">
+                <h3 class="mb-4 text-2xl font-semibold">Space Management</h3>
+                <p class="font-light text-gray-400 sm:text-lg ">Take control of your dance spaces and professor sessions effortlessly. Efficient scheduling and allocation ensure optimal use of resources for a smooth dance academy operation.</p>
+            </div>
+            <!-- Pricing Card -->
+            <div class="flex flex-col p-6 mx-auto max-w-lg text-center text-white bg-gray-800 rounded-lg border border-gray-600 shadow  xl:p-8 ">
+                <h3 class="mb-4 text-2xl font-semibold">Scalability and Growth</h3>
+                <p class="font-light text-gray-400 sm:text-lg ">Easily expand and accommodate growth with our platform. Sustain and nurture your dance community, making informed decisions that lead to long-term success.</p>
+            </div>
+        </div>
+    </div>
+  </section>
+  <section class="bg-gray-900">
+    <div class="pb-4 px-4 mx-auto max-w-screen-xl lg:px-6 ">
+        <div class="mx-auto max-w-screen-sm text-center mb-4 lg:mb-16">
+            <h2 class="mb-2 text-4xl tracking-tight font-extrabold text-white">Our Team</h2>
+            <!-- Uncomment the following paragraph if needed -->
+            <!-- <p class="font-light text-gray-400 lg:mb-16 sm:text-xl">Explore the whole collection of open-source web components and elements built with the utility classes from Tailwind</p> -->
+        </div> 
+        <div class="grid gap-8 mb-6 lg:mb-16 md:grid-cols-1 lg:grid-cols-2">
+            <div class="bg-gray-800 rounded-lg shadow border-gray-700 overflow-hidden flex items-center">
+                <a href="#" class="md:w-1/2 w-full">
+                    <img class="object-cover w-full h-64" src="{% static 'francoorzan.png' %}" alt="Franco Orzan Avatar">
+                </a>
+                <div class="p-5 md:w-1/2 w-full">
+                    <h3 class="text-xl font-bold tracking-tight text-white">
+                        <a href="#">Franco Orzan</a>
+                    </h3>
+                    <span class="text-gray-400 font-semibold">CEO & Web Developer</span>
+                    <p class="mt-3 mb-4 font-light text-gray-400">Franco drives the technical strategy of the Fusion Center platform and brand.</p>
+                </div>
+            </div> 
+            <div class="bg-gray-800 rounded-lg shadow border-gray-700 overflow-hidden flex items-center">
+                <a href="#" class="md:w-1/2 w-full">
+                    <img class="object-cover w-full h-64" src="https://flowbite.s3.amazonaws.com/blocks/marketing-ui/avatars/sofia-mcguire.png" alt="Lana Byrd Avatar">
+                </a>
+                <div class="p-5 md:w-1/2 w-full">
+                    <h3 class="text-xl font-bold tracking-tight text-white">
+                        <a href="#">Lana Byrd</a>
+                    </h3>
+                    <span class="text-gray-400 font-semibold">Marketing & Sale</span>
+                    <p class="mt-3 mb-4 font-light text-gray-400">Lana drives the business strategy of the Fusion Center platform and brand.</p>
+                </div>
+            </div> 
+        </div>  
+    </div>
+</section>
+
+<footer class="p-4 md:p-8 lg:p-10 bg-gray-800">
+    <div class="mx-auto max-w-screen-xl text-center">
+
+        <span class="text-sm  sm:text-center text-gray-400">© 2023-2024 <a href="#" class="hover:underline">Fusion Center</a>. All Rights Reserved.</span>
+    </div>
+  </footer>
+
+  
+{% endblock %}
+

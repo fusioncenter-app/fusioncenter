@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mx-auto pt-4 pl-6 pr-6 pb-6 bg-gray-900 text-center">
+    <h3 class="text-2xl mx-auto mb-2 font-bold text-white">Edit Plan Pricing for "{{ plan.name }}"</h3>
+    <form method="post" enctype="multipart/form-data" class="md:w-1/2 mx-auto">
+        {% csrf_token %}
+
+        <div class="grid grid-cols-1 gap-4 mb-4">
+            <div>
+                <label for="{{ form.name.id_for_label }}" class="text-left block mb-2 text-sm font-medium text-gray-900 text-white">{{ form.name.label }}</label>
+                <input
+                    type="text"
+                    name="{{ form.name.name }}"
+                    id="{{ form.name.id_for_label }}"
+                    value="{% if form.name.value != None %}{{ form.name.value }}{% endif %}"
+                    class="w-full px-3 py-2 text-sm text-white bg-gray-700
+                    {% if form.name.errors %}
+                    border-red-500
+                    {% else %}
+                    border-gray-600
+                    {% endif %} rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:ring-offset-gray-900 border-gray-600 placeholder-gray-400"
+                >
+                {% if form.name.errors %}
+                <div class="mt-2 text-sm text-left text-red-500">{{ form.name.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="{{ form.from_date.id_for_label }}" class="text-left block mb-2 text-sm font-medium text-gray-900 text-white">{{ form.from_date.label }}</label>
+                <input
+                    type="date"
+                    name="{{ form.from_date.name }}"
+                    id="{{ form.from_date.id_for_label }}"
+                    value="{{ form.from_date.value }}"
+                    class="w-full px-3 py-2 text-sm text-white bg-gray-700
+                    {% if form.from_date.errors %}
+                    border-red-500
+                    {% else %}
+                    border-gray-600
+                    {% endif %} rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:ring-offset-gray-900 border-gray-600 placeholder-gray-400"
+                >
+                {% if form.from_date.errors %}
+                <div class="mt-2 text-sm text-left text-red-500">{{ form.from_date.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="{{ form.to_date.id_for_label }}" class="text-left block mb-2 text-sm font-medium text-gray-900 text-white">{{ form.to_date.label }}</label>
+                <input
+                    type="date"
+                    name="{{ form.to_date.name }}"
+                    id="{{ form.to_date.id_for_label }}"
+                    value="{{ form.to_date.value }}"
+                    class="w-full px-3 py-2 text-sm text-white bg-gray-700
+                    {% if form.to_date.errors %}
+                    border-red-500
+                    {% else %}
+                    border-gray-600
+                    {% endif %} rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:ring-offset-gray-900 border-gray-600 placeholder-gray-400"
+                >
+                {% if form.to_date.errors %}
+                <div class="mt-2 text-sm text-left text-red-500">{{ form.to_date.errors }}</div>
+                {% endif %}
+            </div>
+
+            {% if form.plan_type %}
+            <div>
+                <label for="{{ form.plan_type.id_for_label }}" class="text-left block mb-2 text-sm font-medium text-gray-900 text-white">{{ form.plan_type.label }}</label>
+                <select name="{{ form.plan_type.name }}" id="{{ form.plan_type.id_for_label }}"
+                        class="w-full px-3 py-2 text-sm text-white bg-gray-700
+                        {% if form.plan_type.errors %}
+                        border-red-500
+                        {% else %}
+                        border-gray-600
+                        {% endif %} rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:ring-offset-gray-900 border-gray-600 placeholder-gray-400">
+                    {% for choice in form.plan_type.field.choices %}
+                        <option value="{{ choice.0 }}" {% if choice.0 == form.plan_type.value %}selected{% endif %}>
+                            {{ choice.1 }}
+                        </option>
+                    {% endfor %}
+                </select>
+                {% if form.plan_type.errors %}
+                    <div class="mt-2 text-sm text-left text-red-500">{{ form.plan_type.errors }}</div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% if form.sessions_quantity %}
+            <div>
+                <label for="{{ form.sessions_quantity.id_for_label }}" class="text-left block mb-2 text-sm font-medium text-gray-900 text-white">{{ form.sessions_quantity.label }}</label>
+                <input
+                    type="number"
+                    name="{{ form.sessions_quantity.name }}"
+                    id="{{ form.sessions_quantity.id_for_label }}"
+                    value="{{ form.sessions_quantity.value }}"
+                    class="w-full px-3 py-2 text-sm text-white bg-gray-700
+                    {% if form.sessions_quantity.errors %}
+                    border-red-500
+                    {% else %}
+                    border-gray-600
+                    {% endif %} rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:ring-offset-gray-900 border-gray-600 placeholder-gray-400"
+                >
+                {% if form.sessions_quantity.errors %}
+                <div class="mt-2 text-sm text-left text-red-500">{{ form.sessions_quantity.errors }}</div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <div>
+                <label for="{{ form.price_unit.id_for_label }}" class="text-left block mb-2 text-sm font-medium text-gray-900 text-white">{{ form.price_unit.label }}</label>
+                <select name="{{ form.price_unit.name }}" id="{{ form.price_unit.id_for_label }}"
+                        class="w-full px-3 py-2 text-sm text-white bg-gray-700
+                        {% if form.price_unit.errors %}
+                        border-red-500
+                        {% else %}
+                        border-gray-600
+                        {% endif %} rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:ring-offset-gray-900 border-gray-600 placeholder-gray-400">
+                    {% for choice in form.price_unit.field.choices %}
+                        <option value="{{ choice.0 }}" {% if choice.0 == form.price_unit.value %}selected{% endif %}>
+                            {{ choice.1 }}
+                        </option>
+                    {% endfor %}
+                </select>
+                {% if form.price_unit.errors %}
+                    <div class="mt-2 text-sm text-left text-red-500">{{ form.price_unit.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="{{ form.price_quantity.id_for_label }}" class="text-left block mb-2 text-sm font-medium text-gray-900 text-white">{{ form.price_quantity.label }}</label>
+                <input
+                    type="number"
+                    name="{{ form.price_quantity.name }}"
+                    id="{{ form.price_quantity.id_for_label }}"
+                    value="{{ form.price_quantity.value }}"
+                    class="w-full px-3 py-2 text-sm text-white bg-gray-700
+                    {% if form.price_quantity.errors %}
+                    border-red-500
+                    {% else %}
+                    border-gray-600
+                    {% endif %} rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:ring-offset-gray-900 border-gray-600 placeholder-gray-400"
+                >
+                {% if form.price_quantity.errors %}
+                <div class="mt-2 text-sm text-left text-red-500">{{ form.price_quantity.errors }}</div>
+                {% endif %}
+            </div>
+
+        </div>
+
+        <div id="action_buttons" class="text-center mx-auto mt-8 flex justify-center space-x-4">
+            <a href="{% url 'plan_detail' plan_id=plan.id %}" class="flex-1 px-4 py-2 text-red-500 hover:text-red-700 text-sm font-medium border border-red-500 rounded-lg text-center sm:w-auto">Cancel</a>
+            <button type="submit" class="flex-1 px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-800 font-medium rounded-lg text-sm sm:w-auto">Save</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

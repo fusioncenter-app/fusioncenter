@@ -1,0 +1,41 @@
+1. Open your terminal.
+
+    Install Brew
+
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+2. Run the following command to add Homebrew to your PATH and update your shell profile (in this case, it's using the `.zprofile` file):
+
+   (echo; echo 'eval "$(/opt/homebrew/bin/brew shellenv)"') >> /Users/mac-os/.zprofile
+
+   eval "$(/opt/homebrew/bin/brew shellenv)"
+
+3. brew install git
+
+git add .      
+
+git commit -m '3'   
+
+git push origin main
+
+fusioncenter.app@gmail.com
+qrstewbelkrekoem
+
+fusioncenter-app
+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
+Desearas123!
+
+https://github.com/settings/tokens
+
+
+git clone https://github.com/fusioncenter-app/fusioncenter.git
+
+git pull https://github.com/fusioncenter-app/fusioncenter.git main
+
+mkvirtualenv venv
+
+python manage.py makemigrations
+
+python manage.py migrate
+
+asd

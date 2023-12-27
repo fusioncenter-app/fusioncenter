@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mx-auto pt-8 pl-6 pr-6 pb-6 bg-gray-900 text-center">
+    <div class="flex items-center mt-2 mb-4 md:w-1/2 mx-auto">
+        <a href="{% url 'activity_detail' activity.id %}" class="text-blue-500 hover:underline">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+        </a>
+        <h3 class="text-2xl mx-auto font-bold text-white">Create Individual Session</h3>
+    </div>
+    <form method="post" enctype="multipart/form-data" class="md:w-1/2 mx-auto">
+        {% csrf_token %}
+        
+        <div class="grid grid-cols-1 gap-4 mb-4">
+            <div>
+                <label for="{{ form.space.id_for_label }}" class="text-left block mb-2 text-sm font-medium text-gray-900 text-white">{{ form.space.label }}</label>
+                <select name="{{ form.space.name }}" id="{{ form.space.id_for_label }}"
+                    class="w-full px-3 py-2 text-sm text-white bg-gray-700
+                    {% if form.space.errors %}
+                    border-red-500
+                    {% else %}
+                    border-gray-600
+                    {% endif %} rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:ring-offset-gray-900 border-gray-600 placeholder-gray-400">
+                
+                    {% for choice in form.space.field.queryset %}
+                        <option value="{{ choice.id }}" {% if choice.id == form.cleaned_data.space.id %}selected{% endif %}>
+                            {{ choice.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+                {% if form.space.errors %}
+                <div class="mt-2 text-sm text-left text-red-500">{{ form.space.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="{{ form.session_capacity.id_for_label }}" class="text-left block mb-2 text-sm font-medium text-gray-900 text-white">{{ form.session_capacity.label }}</label>
+                <input
+                    type="number"
+                    name="{{ form.session_capacity.name }}"
+                    id="{{ form.session_capacity.id_for_label }}"
+                    value="{{ form.session_capacity.value }}"
+                    class="w-full px-3 py-2 text-sm text-white bg-gray-700
+                    {% if form.session_capacity.errors %}
+                    border-red-500
+                    {% else %}
+                    border-gray-600
+                    {% endif %} rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:ring-offset-gray-900 border-gray-600 placeholder-gray-400"
+                >
+                <p id="helper-checkbox-text" class="mt-2 text-xs font-normal text-left text-gray-500 dark:text-gray-400">{{ form.session_capacity.help_text|safe }}</p>
+                {% if form.session_capacity.errors %}
+                <div class="mt-2 text-sm text-left text-red-500">{{ form.session_capacity.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="{{ form.date.id_for_label }}" class="text-left block mb-2 text-sm font-medium text-gray-900 text-white">{{ form.date.label }}</label>
+                <input
+                    type="date"
+                    name="{{ form.date.name }}"
+                    id="{{ form.date.id_for_label }}"
+                    value="{{ form.date.value }}"
+                    class="w-full px-3 py-2 text-sm text-white bg-gray-700
+                    {% if form.date.errors %}
+                    border-red-500
+                    {% else %}
+                    border-gray-600
+                    {% endif %} rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:ring-offset-gray-900 border-gray-600 placeholder-gray-400"
+                >
+                {% if form.date.errors %}
+                <div class="mt-2 text-sm text-left text-red-500">{{ form.date.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="{{ form.from_time.id_for_label }}" class="text-left block mb-2 text-sm font-medium text-gray-900 text-white">{{ form.from_time.label }}</label>
+                <input
+                    type="time"
+                    name="{{ form.from_time.name }}"
+                    id="{{ form.from_time.id_for_label }}"
+                    value="{{ form.from_time.value }}"
+                    class="w-full px-3 py-2 text-sm text-white bg-gray-700
+                    {% if form.from_time.errors %}
+                    border-red-500
+                    {% else %}
+                    border-gray-600
+                    {% endif %} rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:ring-offset-gray-900 border-gray-600 placeholder-gray-400"
+                >
+                {% if form.from_time.errors %}
+                <div class="mt-2 text-sm text-left text-red-500">{{ form.from_time.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="{{ form.to_time.id_for_label }}" class="text-left block mb-2 text-sm font-medium text-gray-900 text-white">{{ form.to_time.label }}</label>
+                <input
+                    type="time"
+                    name="{{ form.to_time.name }}"
+                    id="{{ form.to_time.id_for_label }}"
+                    value="{{ form.to_time.value }}"
+                    class="w-full px-3 py-2 text-sm text-white bg-gray-700
+                    {% if form.to_time.errors %}
+                    border-red-500
+                    {% else %}
+                    border-gray-600
+                    {% endif %} rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:ring-offset-gray-900 border-gray-600 placeholder-gray-400"
+                >
+                {% if form.to_time.errors %}
+                <div class="mt-2 text-sm text-left text-red-500">{{ form.to_time.errors }}</div>
+                {% endif %}
+            </div>
+
+            
+
+            <!-- Add similar blocks for other fields (e.g., 'instructor', 'status', etc.) -->
+
+        </div>
+        
+        <div id="action_buttons" class="text-center mx-auto mt-8 flex justify-center space-x-4">
+            <a href="{% url 'activity_detail' activity.id %}" class="flex-1 px-4 py-2 text-red-500 hover:text-red-700 text-sm font-medium border border-red-500 rounded-lg text-center sm:w-auto">Cancel</a>
+            <button type="submit" class="flex-1 px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-800 font-medium rounded-lg text-sm sm:w-auto">Save</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

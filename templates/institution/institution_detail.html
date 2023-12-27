@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="md:mx-24 md:pt-2 pt-2 mx-2">
+    <div class="flex justify-between items-center mt-2 mb-4">
+        <h3 class="text-2xl font-bold text-white overflow-hidden whitespace-nowrap max-w-[20ch] overflow-ellipsis">{{ institution.name }}</h3>
+        <a href="{% url 'create_site' %}" class="flex items-center focus:outline-none text-white focus:ring-4 font-medium rounded-lg text-sm px-2 py-2 bg-green-600 hover:bg-green-700 focus:ring-green-800">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            <span class="hidden lg:inline mx-2">Site</span>
+        </a>
+    </div>
+    
+
+    {% if sites %}
+    <div class="relative overflow-x-auto shadow-md rounded-lg">
+        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400 ">
+            <thead class="text-xs uppercase bg-gray-600 text-gray-400">
+                <tr>
+                    <th scope="col" class="text-white px-6 py-3">
+                        Site Name
+                    </th>
+                    <th scope="col" class="text-white px-6 py-3 hidden md:table-cell">
+                        Address
+                    </th>
+                    <th scope="col" class="text-white px-6 py-3 hidden md:table-cell">
+                        City
+                    </th>
+                    <th scope="col" class="text-white text-right px-6 py-3">
+                        Actions
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for site in sites %}
+                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                        <th scope="row" class="px-3 py-4 font-medium overflow-hidden whitespace-nowrap max-w-[20ch] md:max-w-none md:overflow-visible text-gray-300 overflow-x-auto">
+                            {{ site.name }}
+                        </th>
+                        <td class="px-6 py-4 hidden md:table-cell">
+                            {{ site.address }}
+                        </td>
+                        <td class="px-6 py-4 hidden md:table-cell">
+                            {{ site.city }}
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <div class="flex justify-end items-center">
+                                <a href="{% url 'edit_site' site.id %}" class="text-blue-500 hover:underline">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                                    </svg>
+                                </a>
+                                <a href="{% url 'create_space' site.id %}" class="ml-4 text-green-500 hover:underline">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                    </svg>
+                                </a>
+                            </div>
+                        </td>
+                        
+                    </tr>
+                    {% if site.spaces.all %}
+                        {% for space in site.spaces.all %}
+                            <tr class="bg-gray-700 border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                <td scope="row" class="pl-6 px-6 py-4 font-medium overflow-hidden whitespace-nowrap max-w-[20ch] md:max-w-none md:overflow-visible text-gray-300 overflow-x-auto">
+                                    {{ space.name }}
+                                </td>
+                                <td class="px-6 py-4 hidden md:table-cell">
+                                    Max: {{ space.max_capacity }}
+                                </td>
+                                <td class="px-6 py-4 hidden md:table-cell">
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <div class="flex justify-end items-center">
+                                        <a href="{% url 'edit_space' space.id %}" class="text-blue-500 hover:underline">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                                            </svg>
+                                        </a>
+                                        
+    
+                                        <a href="{% url 'space_calendar' space.id %}?week={% now "W" %}&year={% now "Y" %}" class="text-yellow-500 ml-4 hover:underline">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                                            </svg>
+                                        </a>
+                                        
+                                    </div>
+                                </td>
+                                
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr class="bg-gray-700 border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                            <td scope="row" colspan="6" class="pl-12 px-6 py-4 font-thin whitespace-nowrap text-gray-300">
+                                There are no spaces for this site. Add a new one.
+                            </td>
+                        
+                        </tr>
+                    {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% else %}
+        <h5 class="text-xl mt-2 text-white">No sites created for this institution. Please add a new site.</h5>
+    {% endif %}
+</div>
+{% endblock %}

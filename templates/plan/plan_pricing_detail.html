@@ -1,0 +1,139 @@
+
+
+{% extends 'base.html' %}
+
+
+{% load tz %}  {# Load the timezone template tag #}
+
+{% block content %}
+
+
+
+<div class="md:mx-24 md:pt-2 pt-2 mx-2">
+
+    <div class="flex items-center mt-2">
+        <a href="{% url 'plan_detail' plan_pricing.plan.id %}" class="text-blue-500 hover:underline">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+        </a>
+        <h3 class="text-2xl font-bold text-white overflow-hidden whitespace-nowrap max-w-[40ch] overflow-ellipsis ml-2">
+            {{ plan_pricing.name}}
+        </h3>
+        <h2 class="text-md text-white overflow-hidden whitespace-nowrap max-w-[30ch] inline overflow-ellipsis ml-auto">
+            <span class="hidden lg:inline">From:</span> 
+            <span class="font-thin hidden lg:inline">{{ plan_pricing.from_date|date:"D d M y" }}</span>
+        </h2>
+        
+        
+        <h2 class="text-md text-white overflow-hidden hidden lg:inline whitespace-nowrap max-w-[20ch] inline overflow-ellipsis ml-8">
+            <span class="">To:</span> 
+            <span class="font-thin">{{ plan_pricing.to_date|date:"D d M y" }}</span>
+        </h2>
+        {% if plan.plan_type == 'limited' %}
+        <h2 class="text-md text-white overflow-hidden hidden lg:inline whitespace-nowrap max-w-[20ch] inline overflow-ellipsis ml-8">
+            <span class="">Sessions Qty:</span> 
+            <span class="font-thin">{{ plan_pricing.sessions_quantity }}</span>
+        </h2>
+        {% endif %}
+        <h2 class="text-md text-white overflow-hidden hidden lg:inline whitespace-nowrap max-w-[20ch] inline overflow-ellipsis ml-8">
+            <span class="">Price:</span> 
+            <span class="font-thin">{{ plan_pricing.price_unit }} {{ plan_pricing.price_quantity }}</span>
+        </h2>
+        
+    </div>
+    <h3 class="text-md font-thin text-white overflow-hidden whitespace-nowrap max-w-[50ch] overflow-ellipsis ml-10">
+        {{ plan_pricing.plan.name }} | {{ plan_pricing.plan.site.name }}
+    </h3>
+    <div class="flex items-center mt-2 mb-4">
+        <h3 class="text-xl font-bold text-white overflow-hidden whitespace-nowrap max-w-[20ch] overflow-ellipsis ml-2">
+            Enrolled Participants
+        </h3>
+        <a href="{% url 'assign_user_plan' plan_pricing.id %}" class="flex items-center focus:outline-none text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:outline-none focus:ring-green-800 ml-auto font-medium rounded-lg text-sm px-2 py-2 text-center" type="button">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            <span class="hidden lg:inline mx-2">User Plan</span>
+        </a>
+    </div>
+    
+    {% if plan_pricing.userplan_set.all %}
+    <div class="relative overflow-x-auto shadow-md rounded-lg bg-gray-700 ">
+        <table class="w-full text-sm text-left text-gray-400">
+            <thead class="text-xs uppercase bg-gray-600 text-gray-400">
+                <tr>
+                    <th scope="col" class="text-white px-3 py-3">
+                        Name
+                    </th>
+                    <th scope="col" class="text-white text-center px-3 py-3 hidden md:table-cell">
+                        Email
+                    </th>
+                    <th scope="col" class="text-white text-center px-3 py-3 hidden md:table-cell">
+                        Enrolled At
+                    </th>
+                    <th scope="col" class="text-white text-center px-3 py-3 hidden md:table-cell">
+                        Assigner
+                    </th>
+                    <th scope="col" class="text-white text-center px-3 py-3 hidden md:table-cell">
+                        Payment Method
+                    </th>
+                    
+                    <th scope="col" class="text-white text-right px-3 py-3">
+                        Actions
+                    </th>
+                    <!-- Add more columns as needed -->
+                </tr>
+            </thead>
+            <tbody>
+                {% for userplan in plan_pricing.userplan_set.all|dictsort:"created_at" %}
+                    <tr class="bg-gray-700 border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                        <td class="px-3 py-4 whitespace-nowrap text-gray-300">
+                            {{ userplan.user.first_name }} {{ userplan.user.last_name }}
+                        </td>
+                        
+                        <td class="px-3 py-4 text-center hidden md:table-cell">
+                            {{ userplan.user.email }}
+                        </td>
+                        {% with request.COOKIES.user_timezone|default:"UTC" as user_timezone %}
+                            <td class="px-3 py-4 text-center hidden md:table-cell">
+                                {{ userplan.created_at|timezone:user_timezone }}
+                            </td>
+                        {% endwith %}
+                        <td class="px-3 py-4 text-center hidden md:table-cell">
+                            {{ userplan.created_by.get_full_name }}
+                        </td>
+                        <td class="px-3 py-4 text-center hidden md:table-cell">
+                            <span class="w-3 h-3 mx-1 {% if userplan.payment_method == 'unpaid' %}bg-red-500
+                            {% else %} bg-green-500 {% endif %}
+                                rounded-full inline-block"></span>
+                            <span class="ml-1">
+                            {{ userplan.get_payment_method_display }}
+                            </span>
+                        </td>
+                        
+                        <td class="px-3 py-4 text-right">
+                            <div class="flex justify-end items-center">
+                                <a href="{% url 'edit_user_plan' userplan.id %}" class="ml-2 text-yellow-500 text-center hover:underline">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 ml-2 text-green-500 text-center hover:underline">
+                                      <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+                                    </svg>
+                                </a>
+                                <a href="{% url 'participant_plan_pricing_session_list' userplan.id %}" class="ml-2 text-yellow-500 text-center hover:underline">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                                      </svg>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <h5 class="text-xl ml-2 mt-2 text-white">No participants enrolled for this pricing plan. Please add a new participant.</h5>
+    {% endif %}
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="fixed z-0 inset-0 flex items-center justify-center bg-gray-900">
+  <div class="w-full max-w-md p-6 bg-gray-800 rounded-lg shadow-lg mx-4">
+    <h2 class="text-2xl font-semibold text-white">Institution Signup Request</h2>
+    <hr class="border-t border-gray-600 my-4">
+    {% if error_message %}
+      <p class="text-red-500">{{ error_message }}</p>
+    {% endif %}
+
+    <form method="post" class="mt-4">
+      {% csrf_token %}
+      
+      <label for="name" class="block text-white">Name</label>
+      <input type="text" id="name" name="name" required class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 autofocus">
+      
+      <label for="email" class="mt-2 block text-white">Email</label>
+      <input type="email" id="email" name="email" required class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 autofocus">
+      
+      <label for="phone" class="mt-2 block text-white">Phone Number</label>
+      <input type="text" id="phone" name="phone" required class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 autofocus">
+        
+
+      <button type="submit" class="bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none text-white focus:ring-blue-300 font-medium rounded-lg w-full text-lg px-5 py-2.5 text-center mt-8 mb-4">Send Request</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

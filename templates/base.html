@@ -1,0 +1,122 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fusion Center</title>
+    <!-- Include Tailwind CSS from the CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.9"></script>
+
+    <!-- Flowbite -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.8.1/flowbite.min.css" rel="stylesheet" />
+
+    <style>
+      input[type="date"]::-webkit-calendar-picker-indicator {
+          filter: invert(1); /* Invert the icon color to white */
+      }
+      input::-webkit-calendar-picker-indicator{
+          display: none;    
+      }
+      input[type="date"]::-webkit-input-placeholder{ 
+    visibility: hidden !important;
+}
+  </style>
+  {% block style %}
+  {% endblock %}
+
+  {% if messages %}
+  <style>
+      /* CSS for toast animation */
+      .toast-message {
+          position: fixed;
+          bottom: 20px; /* Adjust the vertical position as needed */
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 1000;
+          opacity: 0;
+          animation: fadeIn 5.5s ease-in-out forwards;
+      }
+
+      @keyframes fadeIn {
+          0% {
+              opacity: 0;
+          }
+          25% {
+              opacity: 1;
+          }
+          85% {
+              opacity: 1;
+          }
+          100% {
+              opacity: 0;
+          }
+      }
+  </style>
+
+  {% for message in messages %}
+      {% if message.tags == 'success' %}
+          <div id="toast-success" class="toast-message flex items-center w-full max-w-xs p-4 mb-4 text-gray-500 bg-white rounded-lg shadow dark:text-gray-400 dark:bg-gray-800" role="alert">
+              <!-- Success icon and styling -->
+              <!-- Adjust icon, background, and text colors accordingly -->
+              <div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-green-500 bg-green-100 rounded-lg dark:bg-green-800 dark:text-green-200">
+                  <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 8.207-4 4a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L9 10.586l3.293-3.293a1 1 0 0 1 1.414 1.414Z"/>
+                  </svg>
+                  <span class="sr-only">Check icon</span>
+              </div>
+              <div class="ml-3 text-sm font-normal">{{ message }}</div>
+          </div>
+      {% elif message.tags == 'error' %}
+          <!-- Error toast styling -->
+          <div id="toast-danger" class="toast-message flex items-center w-full max-w-xs p-4 mb-4 text-gray-500 bg-white rounded-lg shadow dark:text-gray-400 dark:bg-gray-800" role="alert">
+              <div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-red-500 bg-red-100 rounded-lg dark:bg-red-800 dark:text-red-200">
+                  <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 11.793a1 1 0 1 1-1.414 1.414L10 11.414l-2.293 2.293a1 1 0 0 1-1.414-1.414L8.586 10 6.293 7.707a1 1 0 0 1 1.414-1.414L10 8.586l2.293-2.293a1 1 0 0 1 1.414 1.414L11.414 10l2.293 2.293Z"/>
+                  </svg>
+                  <span class="sr-only">Error icon</span>
+              </div>
+              <div class="ml-3 text-sm font-normal">{{ message }}</div>
+          </div>
+      {% elif message.tags == 'warning' %}
+          <!-- Warning toast styling -->
+          <div id="toast-warning" class="toast-message flex items-center w-full max-w-xs p-4 text-gray-500 bg-white rounded-lg shadow dark:text-gray-400 dark:bg-gray-800" role="alert">
+              <div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-orange-500 bg-orange-100 rounded-lg dark:bg-orange-700 dark:text-orange-200">
+                  <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM10 15a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm1-4a1 1 0 0 1-2 0V6a1 1 0 0 1 2 0v5Z"/>
+                  </svg>
+                  <span class="sr-only">Warning icon</span>
+              </div>
+              <div class="ml-3 text-sm font-normal">{{ message }}</div>
+          </div>
+      {% endif %}
+  {% endfor %}
+{% endif %}
+  
+  <script>
+    // Get the user's timezone using JavaScript
+    var userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+    // Set the timezone in a cookie or store it in a JavaScript variable
+    document.cookie = "user_timezone=" + userTimezone + "; path=/";
+</script>
+</head>
+<body >
+    
+    {% include 'navbar.html' %}
+    
+    <main class="bg-gray-900 px-1 md:px-0 min-h-screen">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.8.1/datepicker.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.8.1/flowbite.min.js"></script>
+
+</body>
+</html>

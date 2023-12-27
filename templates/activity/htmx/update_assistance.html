@@ -1,0 +1,8 @@
+<td id="status-cell-{{ participant.id }}" class="px-3 py-4 justify-center flex items-center">
+    <span class="w-3 h-3 mx-1 {% if participant.assistance_status == 'present' %}bg-green-500{% endif %}
+        {% if participant.assistance_status == 'cancelled' %}bg-red-500{% endif %}
+        {% if participant.assistance_status == 'absent' %}bg-yellow-500{% endif %}
+        {% if participant.assistance_status == 'registered' %}bg-blue-500{% endif %}
+        rounded-full inline-block"></span>
+    <span class="ml-1">{{ participant.assistance_status|capfirst }}</span>
+</td>
