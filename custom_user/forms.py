@@ -4,7 +4,7 @@ from .models import User,Profile
 
 from django.contrib.auth import password_validation
 from django.utils.translation import gettext as _
-
+# comment
 
 class CustomUserCreationForm(forms.ModelForm):
     first_name = forms.CharField(max_length=30, required=True)
