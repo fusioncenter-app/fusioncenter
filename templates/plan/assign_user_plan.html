@@ -41,7 +41,7 @@
                                {% endif %}
                                rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:ring-offset-gray-900 border-gray-600 placeholder-gray-400">
                     <option value="" {% if not form.payment_method.value %}selected{% endif %}>Select Payment Method</option>
-                    {% for key, value in form.payment_method.field.choices %}
+                    {% for key, value in form.payment_method.queryset.choices %}
                         <option value="{{ key }}" {% if key == form.payment_method.value %}selected{% endif %}>
                             {{ value }}
                         </option>

@@ -23,24 +23,55 @@ class FiltersForm(forms.Form):
         self.fields['instructors'].choices = instructor_choices
 
 class SelfRegistrationForm(forms.ModelForm):
-
-    plan_pricing = forms.ModelChoiceField(queryset=PlanPricing.objects.none(), label='Plan Pricing')
+    plan_pricing = forms.ChoiceField(label='Plan Pricing', widget=forms.Select())
 
     class Meta:
         model = Participants
         fields = ['plan_pricing']
 
-    def __init__(self, session_id, *args, **kwargs):
+    def __init__(self, session_id, user, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.session_id = session_id
-        self.fields['plan_pricing'].queryset = self.get_available_plan_pricings()
+        self.user = user
+        self.fields['plan_pricing'].choices = self.get_plan_pricing_choices()
+        # print(self.fields['plan_pricing'].choices)
+
+    def get_plan_pricing_choices(self):
+        # session = Session.objects.get(pk=self.session_id)
+        # print(self.user)
+        # print(self.session_id)
+        existing_user_plan_pricings = self.get_available_user_plan_pricings()
+        available_plan_pricings = self.get_available_plan_pricings()
+
+        # Create choices for the plan_pricing field
+        choices = []
+
+        for user_plan_pricing in existing_user_plan_pricings:
+            if user_plan_pricing.plan_pricing.plan.plan_type == 'limited':
+                choices.append((f'userplan-{user_plan_pricing.id}', f'Existing Plan - {user_plan_pricing.plan_pricing} | {user_plan_pricing.plan_pricing.price_unit} {user_plan_pricing.plan_pricing.price_quantity} | Sessions Left: {user_plan_pricing.sessions_left}'))
+            else:
+                choices.append((f'userplan-{user_plan_pricing.id}', f'Existing Plan - {user_plan_pricing.plan_pricing} | {user_plan_pricing.plan_pricing.price_unit} {user_plan_pricing.plan_pricing.price_quantity}'))
+
+        for plan_pricing in available_plan_pricings:
+            choices.append((f'planpricing-{plan_pricing.id}', f'New Plan - {plan_pricing} | {plan_pricing.price_unit} {plan_pricing.price_quantity}'))
+
+        return choices
+
+    def get_available_user_plan_pricings(self):
+        session = Session.objects.get(pk=self.session_id)
+        user_plan_pricings = UserPlan.objects.filter(
+            user=self.user,
+            plan_pricing__plan__activities=session.activity,
+            plan_pricing__from_date__lte=session.date,
+            plan_pricing__to_date__gte=session.date,
+            plan_pricing__status='active',
+            plan_pricing__plan__plan_type='limited',
+        ).order_by('plan_pricing__plan__plan_type', 'plan_pricing__from_date')
+
+        return user_plan_pricings
 
     def get_available_plan_pricings(self):
-        # Get the session based on the session_id
         session = Session.objects.get(pk=self.session_id)
-
-        # Assuming you have a method to get available plan pricings based on criteria
-        # Modify this according to your actual logic for retrieving available plan pricings
         available_plan_pricings = PlanPricing.objects.filter(
             plan__activities=session.activity,
             from_date__lte=session.date,
@@ -49,67 +80,80 @@ class SelfRegistrationForm(forms.ModelForm):
         ).order_by('plan__plan_type', 'from_date')
 
         return available_plan_pricings
-    
+
     def clean_plan_pricing(self):
-        plan_pricing = self.cleaned_data['plan_pricing']
-        email = self.cleaned_data.get('email')
+        plan_pricing_choice = self.cleaned_data['plan_pricing']
 
-        if email:
-            user = User.objects.filter(email=email).first()
-            if user:
-                # Check if the user already has a plan with the selected plan pricing
-                existing_user_plan = UserPlan.objects.filter(user=user, plan_pricing=plan_pricing).first()
+        if not plan_pricing_choice:
+            raise forms.ValidationError("Plan pricing choice is required.")
 
-                if existing_user_plan:
-                    # If the existing plan is unlimited, no validation error
-                    if existing_user_plan.plan_pricing.plan.plan_type == 'unlimited':
-                        self.add_error('plan_pricing',"User already has this unlimited plan pricing.")
+        plan_pricing_choice_split_result = plan_pricing_choice.split("-")
+        choice_1 = plan_pricing_choice_split_result[0]
+        choice_2 = plan_pricing_choice_split_result[1]
 
-                    # If the existing plan is limited and has 0 sessions left, pass validation
-                    elif existing_user_plan.sessions_left == 0:
-                        return plan_pricing
+        if choice_1 == 'userplan':
+            user_plan_id = int(choice_2)
+            user_plan = UserPlan.objects.get(pk=user_plan_id)
 
-                    # Otherwise, throw an error
-                    else:
-                        self.add_error('plan_pricing',f"User already has this plan pricing with {existing_user_plan.sessions_left}  sessions left.")
-                
-        return plan_pricing
+            if user_plan.plan_pricing.plan.plan_type == 'limited' and user_plan.sessions_left <= 0:
+                raise forms.ValidationError("You have no sessions left.")
+            elif user_plan.plan_pricing.plan.plan_type == 'unlimited':
+                raise forms.ValidationError("You can register yourself already, you have an unlimited plan to assist to this session.")
+            else:
+                return plan_pricing_choice
+
+        elif choice_1 == 'planpricing':
+            plan_pricing_id = int(choice_2)
+            plan_pricing = PlanPricing.objects.get(pk=plan_pricing_id)
+
+            # Validate if the plan pricing is still available
+            if plan_pricing.status != 'active':
+                raise forms.ValidationError("Selected plan pricing is no longer available.")
+
+            return plan_pricing_choice
 
     def save(self, commit=True):
         session_id = self.session_id
-        
-
-        # Use get_object_or_404 to handle the case where the session does not exist
         session = get_object_or_404(Session, pk=session_id)
 
-        # Assuming the session is not canceled
-        if session.status != 'cancelled':
-            email = self.cleaned_data['email']
-            plan_pricing = self.cleaned_data['plan_pricing']
-            payment_method = self.cleaned_data['payment_method']
+        if session.status == 'cancelled':
+            raise forms.ValidationError("Cannot register for a cancelled session.")
 
-            # Get the user based on the provided email
-            user, created = User.objects.get_or_create(email=email)
+    
+        plan_pricing_choice = self.cleaned_data['plan_pricing']
+        print(plan_pricing_choice)
+        plan_pricing_choice_split_result = plan_pricing_choice.split("-")
+        choice_1 = plan_pricing_choice_split_result[0]
+        choice_2 = plan_pricing_choice_split_result[1]
 
-            # Provide the correct value for created_by (request.user if available)
-            created_by = getattr(self, 'created_by', None)  # Use None if not available
+        if choice_1 == 'userplan':
+            user_plan_id = int(choice_2)
+            user_plan = UserPlan.objects.get(pk=user_plan_id)
 
-            # Create a UserPlan for the user
-            user_plan = UserPlan.objects.create(
-                user=user,
-                plan_pricing=plan_pricing,
-                sessions_left=0 if plan_pricing.plan.plan_type == 'unlimited' else plan_pricing.sessions_quantity,
-                created_by=created_by,  # Assuming request is available in the form
-            )
-
-            # If the plan type is limited, create a Participants instance
-            if plan_pricing.plan.plan_type == 'limited':
+            if user_plan.plan_pricing.plan.plan_type == 'limited':
                 participant = Participants.objects.create(
                     session=session,
-                    user=user,
+                    user=self.user,
                     user_plan=user_plan,
                 )
-
-                # Return the created participant
                 return participant
+            
             return user_plan
+
+        elif choice_1 == 'planpricing':
+            plan_pricing_id = int(choice_2)
+            plan_pricing = PlanPricing.objects.get(pk=plan_pricing_id)
+
+            user_plan = UserPlan.objects.create(
+            user=self.user,
+            plan_pricing=plan_pricing,
+            sessions_left=0 if plan_pricing.plan.plan_type == 'unlimited' else plan_pricing.sessions_quantity,
+            created_by=self.user,
+        )
+            
+        return
+
+        
+
+        
+        

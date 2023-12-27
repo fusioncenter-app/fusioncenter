@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mx-auto pt-4 pl-6 pr-6 pb-6 bg-gray-900 text-center">
+    <h3 class="text-2xl mx-auto mb-2 font-bold text-white">Session Registration</h3>
+    <p class="text-md font-normal mx-auto mt-4 mb-1 text-white">{{ session.activity.name }}</p>
+    <p class="text-md font-thin mx-auto mb-1  text-white">{{ session.date|date:"D d M y" }} </p>
+    <p class="text-md font-thin mx-auto mb-4 text-white">{{ session.from_time|time:"H:i" }} - {{ session.to_time|time:"H:i" }}</p>
+    <form method="post" enctype="multipart/form-data" class="md:w-1/2 mx-auto">
+        {% csrf_token %}
+
+        <div class="grid grid-cols-1 gap-4 mb-4">
+            <div>
+                <label for="{{ form.plan_pricing.id_for_label }}" class="text-left block mb-2 text-sm font-medium text-gray-900 text-white">
+                    {{ form.plan_pricing.label }}
+                </label>
+                <select name="{{ form.plan_pricing.name }}" id="{{ form.plan_pricing.id_for_label }}"
+                        class="w-full px-3 py-2 text-sm text-white bg-gray-700
+                               {% if form.plan_pricing.errors %}
+                                   border-red-500
+                               {% else %}
+                                   border-gray-600
+                               {% endif %}
+                               rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:ring-offset-gray-900 border-gray-600 placeholder-gray-400">
+                    <option value="" {% if not form.plan_pricing.value %}selected{% endif %} disable>Select Plan Pricing</option>
+                    {% for key, value in form.plan_pricing.field.choices %}
+                        <option value="{{ key }}" {% if key == form.plan_pricing.value %}selected{% endif %}>
+                            {{ value }} 
+                        </option>
+                    {% endfor %}
+                </select>
+                {% if form.plan_pricing.errors %}
+                    <div class="mt-2 text-sm text-left text-red-500">{{ form.plan_pricing.errors }}</div>
+                {% endif %}
+            </div>
+            
+        </div>
+
+        <div id="action_buttons" class="text-center mx-auto mt-8 flex justify-center space-x-4">
+            <a href="{% url 'explore_page' %}" class="flex-1 px-4 py-2 text-red-500 hover:text-red-700 text-sm font-medium border border-red-500 rounded-lg text-center sm:w-auto">Cancel</a>
+            <button type="submit" class="flex-1 px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-800 font-medium rounded-lg text-sm sm:w-auto">Save</button>
+        </div>
+        
+    </form>
+</div>
+
+{% endblock %}

@@ -2,15 +2,16 @@ from django.shortcuts import render, redirect, get_object_or_404, reverse, get_l
 from django.contrib.auth.decorators import login_required, user_passes_test
 from .models import Activity,Session, Participants
 from institution.models import Site, Space, Instructor
-from plans.models import UserPlan
+from plans.models import UserPlan, PlanPricing
 from datetime import date as today_date
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 
 from itertools import groupby
 from django.views import View
 from django.core.paginator import Paginator
 
-from .forms_explore import FiltersForm
+from .forms_explore import FiltersForm, SelfRegistrationForm
 
 from urllib.parse import urlencode, urlparse, parse_qs
 
@@ -89,6 +90,22 @@ class ExplorePageView(View):
                 # Calculate total_participants and availability
                 session.total_participants = session.registered_count + session.present_count + session.absent_count
                 session.availability = session.session_capacity - session.total_participants
+                participant = Participants.objects.filter(session=session, user=request.user).first()
+                session.participant = participant if participant else None
+
+                # Fetch available plan pricings for the session
+                available_plan_pricings = PlanPricing.objects.filter(
+                    plan__activities=session.activity,
+                    from_date__lte=session.date,
+                    to_date__gte=session.date,
+                    status='active',
+                ).exists()
+
+                # print(available_plan_pricings,session.id)
+
+                # Set the boolean flag indicating whether there are available plan pricings
+                session.has_available_plan_pricings = available_plan_pricings
+                # print(session.has_available_plan_pricings)
 
         # Add current page and next page to the context
         current_page = paginated_sessions.number
@@ -104,3 +121,26 @@ class ExplorePageView(View):
         }
 
         return render(request, self.template_name, context)
+    
+
+class SessionRegistrationView(LoginRequiredMixin, View):
+    template_name = 'explore/self_session_registration.html'
+    login_url = '/users/login/'
+
+    def get(self, request, session_id):
+        session = get_object_or_404(Session, pk=session_id)
+        user = request.user
+        form = SelfRegistrationForm(session_id=session_id, user=user)
+        return render(request, self.template_name, {'form': form, 'session': session})
+
+    def post(self, request, session_id):
+        session = get_object_or_404(Session, pk=session_id)
+        user = request.user
+        form = SelfRegistrationForm(session_id=session_id, user=user, data=request.POST)
+
+        if form.is_valid():
+            form.save()
+            return redirect('explore_page')
+        else:
+            return render(request, self.template_name, {'form': form, 'session': session})
+
