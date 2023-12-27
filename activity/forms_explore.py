@@ -145,13 +145,20 @@ class SelfRegistrationForm(forms.ModelForm):
             plan_pricing = PlanPricing.objects.get(pk=plan_pricing_id)
 
             user_plan = UserPlan.objects.create(
-            user=self.user,
-            plan_pricing=plan_pricing,
-            sessions_left=0 if plan_pricing.plan.plan_type == 'unlimited' else plan_pricing.sessions_quantity,
-            created_by=self.user,
-        )
+                user=self.user,
+                plan_pricing=plan_pricing,
+                sessions_left=0 if plan_pricing.plan.plan_type == 'unlimited' else plan_pricing.sessions_quantity,
+                created_by=self.user,
+            )
+            if user_plan.plan_pricing.plan.plan_type == 'limited':
+                participant = Participants.objects.create(
+                        session=session,
+                        user=self.user,
+                        user_plan=user_plan,
+                    )
+                return participant
             
-        return
+            return user_plan
 
         
 
