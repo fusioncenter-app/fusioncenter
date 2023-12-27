@@ -5,6 +5,7 @@
   <div class="w-full max-w-md p-6 bg-gray-800 rounded-lg shadow-lg mx-4">
     <h2 class="text-2xl font-semibold text-white">Login</h2>
     <hr class="border-t border-gray-600 my-4">
+    
     {% if error_message %}
       <p class="text-red-500">{{ error_message }}</p>
       {% if not user_is_active and is_active_error and inactive_user_email %}
@@ -18,15 +19,33 @@
 
     <form method="post" class="mt-4">
       {% csrf_token %}
-      <label for="email" class="block text-white">Email</label>
-      <input type="email" id="email" name="email" value="{% if inactive_user_email != None %}{{inactive_user_email}}{% endif %}" required class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 autofocus">
-      <label for="password" class="block mt-4 text-white">Password</label>
-      <input type="password" id="password" name="password" required class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 ">
+      
+      <!-- Email -->
+      <div class="mb-2">
+        <label for="email" class="block text-white">Email</label>
+        <input type="email" id="email" name="email" value="{% if email != None %}{{email}}{% endif %}" required class="bg-gray-700 border {% if email_error %}border-red-500{% else %}border-gray-600{% endif %} text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 autofocus">
+        {% if email_error %}
+          <div class="mt-2 text-sm text-left text-red-500">{{ email_error }}</div>
+        {% endif %}
+      </div>
+
+      <!-- Password -->
+      <div class="mb-2">
+        <label for="password" class="block mt-4 text-white">Password</label>
+        <input type="password" id="password" name="password" required class="bg-gray-700 border {% if password_error %}border-red-500{% else %}border-gray-600{% endif %} text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+        {% if password_error %}
+          <div class="mt-2 text-sm text-left text-red-500">{{ password_error }}</div>
+        {% endif %}
+      </div>
+      
+      <!-- Login Button -->
       <button type="submit" class="bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none text-white focus:ring-blue-300 font-medium rounded-lg w-full text-lg px-5 py-2.5 text-center mt-8 mb-4">Login</button>
     </form>
 
+    <!-- Registration Link -->
     <p class="mt-4 text-white">Don't have an account? <a href="{% url 'register' %}" class="text-blue-500 underline">Register here.</a></p>
-    <!-- Add the "Forgot Password" link -->
+    
+    <!-- Forgot Password Link -->
     <p class="mt-2"><a href="{% url 'password_reset' %}" class="text-blue-500 underline">Forgot Password?</a></p>
   </div>
 </div>

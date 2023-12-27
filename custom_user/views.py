@@ -60,7 +60,7 @@ def login_view(request):
                 error_message = "Account not verified. Check your email."
                 is_active_error = True
 
-        return render(request, 'users/login.html', {'error_message': error_message, 'is_active_error': is_active_error, 'inactive_user_email': inactive_user_email})
+        return render(request, 'users/login.html', {'email':email,'error_message': error_message, 'is_active_error': is_active_error, 'inactive_user_email': inactive_user_email})
         
         
     
