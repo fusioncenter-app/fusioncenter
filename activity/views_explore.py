@@ -46,8 +46,11 @@ def calculate_session_details(session, request_user):
     session.has_available_plan_pricings = available_plan_pricings
 
     # Fetch participant for the request user
-    participant = Participants.objects.filter(session=session, user=request_user).first()
-    session.participant = participant if participant else None
+    if request_user and request_user.is_authenticated:
+        participant = Participants.objects.filter(session=session, user=request_user).first()
+        session.participant = participant if participant else None
+    else:
+        session.participant = None 
 
     return session
 
@@ -365,7 +368,6 @@ def explore_user_session_with_no_pricing(request, session_id,):
     return HttpResponse(updated_inner_html)
 
 
-@login_required(login_url='login')
 def session_info(request, session_id,):
     
     session = get_object_or_404(Session, id=session_id)
