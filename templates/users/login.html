@@ -23,7 +23,7 @@
       <!-- Email -->
       <div class="mb-2">
         <label for="email" class="block text-white">Email</label>
-        <input type="email" id="email" name="email" value="{% if email != None %}{{email}}{% endif %}" required class="bg-gray-700 border {% if email_error %}border-red-500{% else %}border-gray-600{% endif %} text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 autofocus">
+        <input type="email" id="email" name="email" value="{% if email != None %}{{email}}{% endif %}" required class="bg-gray-700 border {% if email_error %}border-red-500{% else %}border-gray-600{% endif %} text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 autofocus" autofocus>
         {% if email_error %}
           <div class="mt-2 text-sm text-left text-red-500">{{ email_error }}</div>
         {% endif %}
