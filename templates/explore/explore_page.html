@@ -145,6 +145,30 @@
 </script>
 
 <script>
+    document.addEventListener('htmx:afterSwap', (event) => {
+        // Get all participant buttons
+        var participantButtons = document.querySelectorAll('[id^="participant_button_"]');
+
+        // Add click event listener to each participant button
+        participantButtons.forEach(function (button) {
+            button.addEventListener('click', function (event) {
+                // Prevent the default behavior (e.g., following the link)
+                event.preventDefault();
+
+                // Your logic or additional actions for the participant button click can go here
+
+                // Log to console for debugging
+                console.log('Participant button clicked');
+
+                // Stop the event propagation to prevent the drawer from opening
+                event.stopPropagation();
+            });
+        });
+    });
+</script>
+
+
+<script>
     function openDrawer() {
     var drawer = document.getElementById('readProductDrawer');
 
@@ -243,24 +267,7 @@
   
     
   </script>
-  
 
-<script>
-    document.addEventListener('htmx:afterSwap', (event) => {
-        // Reattach events for the new content
-        const newContent = event.detail.target;
-        const sessionCards = newContent.querySelectorAll('[id^="session_card_"]');
-
-        sessionCards.forEach((card) => {
-            const sessionId = card.id.replace('session_card_', '');
-            card.onclick = () => {
-                // Log to console for debugging
-                console.log('Session card clicked:', sessionId);
-                openDrawer();
-            };
-        });
-    });
-</script>
 
 
 {% endblock %}

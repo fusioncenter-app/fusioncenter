@@ -37,11 +37,18 @@
         </div>
 
         <div id="action_buttons" class="text-center mx-auto mt-8 flex justify-center space-x-4">
-            <a href="{% url 'explore_page' %}" class="flex-1 px-4 py-2 text-red-500 hover:text-red-700 text-sm font-medium border border-red-500 rounded-lg text-center sm:w-auto">Cancel</a>
+            <a onclick="goBack()" class="flex-1 px-4 py-2 text-red-500 hover:text-red-700 text-sm font-medium border border-red-500 rounded-lg text-center sm:w-auto">Cancel</a>
             <button type="submit" class="flex-1 px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-800 font-medium rounded-lg text-sm sm:w-auto">Save</button>
         </div>
         
     </form>
 </div>
+
+<script>
+    function goBack() {
+        // Go back to the previous page in the browser history
+        window.history.back();
+    }
+</script>
 
 {% endblock %}
