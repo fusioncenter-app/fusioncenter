@@ -6,7 +6,7 @@ from plans.models import UserPlan, PlanPricing
 from datetime import date as today_date
 from django.contrib.auth.mixins import LoginRequiredMixin
 
-
+import time
 from itertools import groupby
 from django.views import View
 from django.core.paginator import Paginator
@@ -372,6 +372,6 @@ def session_info(request, session_id,):
     session = calculate_session_details(session, request.user)
     # Render the updated inner HTML based on the new status
     updated_inner_html = render_to_string('explore/htmx/session_info.html', {'session': session}, request=request)
-
+    # time.sleep(5)
     # Return the updated HTML as JSON response
     return HttpResponse(updated_inner_html)
