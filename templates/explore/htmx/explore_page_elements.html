@@ -28,8 +28,8 @@
                             {% endif %}
 
                         </div>
-                        <div class="flex flex-col text-right ml-auto p-4">
-                            <div class="ml-auto mb-4">
+                        <div class="flex flex-col text-right ml-auto pr-4 py-4">
+                            <div class="ml-auto">
                                 {% if user.is_authenticated %}
                                   {% if session.participant == None %}
                                         {% if session.availability > 0 and session.has_available_plan_pricings %}
@@ -79,6 +79,7 @@
                                             {% endif %}
                                         {% endif %}
                                         {% if session.participant.assistance_status == 'registered' %}
+                                        <div class="relative top-0 right-0 z-50">
                                             <div id="participant_button_{{session.id}}" class="text-red-600" style="cursor: pointer;"
                                                 hx-get="{% url 'explore_user_session_cancellation' session.id session.participant.user_plan.id %}"
                                                 hx-target="#session_card_{{session.id}}"
@@ -89,6 +90,7 @@
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                 </svg>     
                                             </div>
+                                        </div>
                                         {% endif %}
                                     {% endif %}
                                 {% else %}
@@ -101,7 +103,7 @@
                                 {% endif %}
                             </div>
                             
-                            <h5 class=" inline text-md tracking-tight text-gray-900 dark:text-white overflow-hidden whitespace-nowrap max-w-[20ch]"> {% if session.availability > 0 %} {{session.availability}}{% else %} 0{% endif %} Spots</h5>
+                            <h5 class=" inline text-md mt-12 tracking-tight text-gray-900 dark:text-white overflow-hidden whitespace-nowrap max-w-[20ch]"> {% if session.availability > 0 %} {{session.availability}}{% else %} 0{% endif %} Spots</h5>
                             <h5 class=" inline text-sm tracking-tight text-gray-400  mb-1 overflow-hidden"> {{session.activity.type}}</h5>
                         </div>
                     </a>
