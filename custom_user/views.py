@@ -29,6 +29,9 @@ def settings_view(request):
     return render(request, 'users/settings.html')
 
 def login_view(request):
+    if request.user.is_authenticated:
+        return redirect('home') 
+    
     if request.method == 'POST':
         email = request.POST['email']  # Assuming you have an email field in your login form
         password = request.POST['password']
@@ -158,6 +161,8 @@ def send_verification_email_again(request, email):
 
 
 def register(request):
+    if request.user.is_authenticated:
+        return redirect('home') 
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
