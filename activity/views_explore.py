@@ -15,6 +15,42 @@ from .forms_explore import FiltersForm, SelfRegistrationForm
 
 from urllib.parse import urlencode, urlparse, parse_qs
 
+import re
+from django.contrib import messages
+from datetime import datetime, timedelta,date
+from django.utils.timezone import make_aware
+from django.utils import timezone
+
+from django.template.loader import render_to_string
+from django.http import HttpResponse
+
+def calculate_session_details(session, request_user):
+    # Calculate counts for different assistance_status
+    session.registered_count = Participants.objects.filter(session=session, assistance_status='registered').count()
+    session.present_count = Participants.objects.filter(session=session, assistance_status='present').count()
+    session.absent_count = Participants.objects.filter(session=session, assistance_status='absent').count()
+
+    # Calculate total_participants and availability
+    session.total_participants = session.registered_count + session.present_count + session.absent_count
+    session.availability = session.session_capacity - session.total_participants
+
+    # Fetch available plan pricings for the session
+    available_plan_pricings = PlanPricing.objects.filter(
+        plan__activities=session.activity,
+        from_date__lte=session.date,
+        to_date__gte=session.date,
+        status='active',
+    ).exists()
+
+    # Set the boolean flag indicating whether there are available plan pricings
+    session.has_available_plan_pricings = available_plan_pricings
+
+    # Fetch participant for the request user
+    participant = Participants.objects.filter(session=session, user=request_user).first()
+    session.participant = participant if participant else None
+
+    return session
+
 class ExplorePageView(View):
     paginate_by = 10
 
@@ -82,30 +118,7 @@ class ExplorePageView(View):
             grouped_sessions[date] = list(group)
 
             for session in grouped_sessions[date]:
-                # Calculate counts for different assistance_status
-                session.registered_count = Participants.objects.filter(session=session, assistance_status='registered').count()
-                session.present_count = Participants.objects.filter(session=session, assistance_status='present').count()
-                session.absent_count = Participants.objects.filter(session=session, assistance_status='absent').count()
-
-                # Calculate total_participants and availability
-                session.total_participants = session.registered_count + session.present_count + session.absent_count
-                session.availability = session.session_capacity - session.total_participants
-                participant = Participants.objects.filter(session=session, user=request.user).first()
-                session.participant = participant if participant else None
-
-                # Fetch available plan pricings for the session
-                available_plan_pricings = PlanPricing.objects.filter(
-                    plan__activities=session.activity,
-                    from_date__lte=session.date,
-                    to_date__gte=session.date,
-                    status='active',
-                ).exists()
-
-                # print(available_plan_pricings,session.id)
-
-                # Set the boolean flag indicating whether there are available plan pricings
-                session.has_available_plan_pricings = available_plan_pricings
-                # print(session.has_available_plan_pricings)
+                session = calculate_session_details(session, request.user)
 
         # Add current page and next page to the context
         current_page = paginated_sessions.number
@@ -140,7 +153,225 @@ class SessionRegistrationView(LoginRequiredMixin, View):
 
         if form.is_valid():
             form.save()
+            messages.success(request, 'You were registered successfully.')
             return redirect('explore_page')
         else:
             return render(request, self.template_name, {'form': form, 'session': session})
 
+
+@login_required(login_url='login')
+def explore_self_session_registration(request, session_id, user_plan_id):
+
+    user = request.user
+
+    # Validate if the provided user_plan_id corresponds to the request.user
+    user_plan = get_object_or_404(UserPlan, id=user_plan_id, user=user)
+
+    # Get the session using get_object_or_404
+    session = get_object_or_404(Session, id=session_id)
+
+    plan_pricing = user_plan.plan_pricing
+
+    # Validate if the plan pricing associated with the user plan has the same activity related to the session
+    activity_id_of_session = session.activity_id
+    if not plan_pricing.plan.activities.filter(id=activity_id_of_session).exists():
+        messages.error(request, 'User plan pricing does not match the activity of the session.')
+        session = calculate_session_details(session, request.user)
+        # Render the updated inner HTML based on the new status
+        updated_inner_html = render_to_string('explore/htmx/explore_session_card_update.html', {'session': session}, request=request)
+
+        # Return the updated HTML as JSON response
+        return HttpResponse(updated_inner_html)
+
+    # Validate if the plan pricing is still valid based on from_date and to_date
+    if not plan_pricing.from_date <= session.date <= plan_pricing.to_date:
+        messages.error(request, 'User plan pricing is not valid for the current date.')
+        session = calculate_session_details(session, request.user)
+        # Render the updated inner HTML based on the new status
+        updated_inner_html = render_to_string('explore/htmx/explore_session_card_update.html', {'session': session}, request=request)
+
+        # Return the updated HTML as JSON response
+        return HttpResponse(updated_inner_html)
+
+    # Check if the user has sessions left
+    if user_plan.plan_pricing.plan.plan_type == 'limited':
+        if user_plan.sessions_left <= 0:
+            messages.warning(request, 'You have no sessions left in your plan.')
+            session = calculate_session_details(session, request.user)
+            # Render the updated inner HTML based on the new status
+            updated_inner_html = render_to_string('explore/htmx/explore_session_card_update.html', {'session': session}, request=request)
+
+            # Return the updated HTML as JSON response
+            return HttpResponse(updated_inner_html)
+        else:
+            # Count registered, absent, and present participants for the session
+            registered_count = Participants.objects.filter(session=session, assistance_status='registered').count()
+            absent_count = Participants.objects.filter(session=session, assistance_status='absent').count()
+            present_count = Participants.objects.filter(session=session, assistance_status='present').count()
+
+            total_participants = registered_count + absent_count + present_count
+            
+            # print(total_participants)
+            # Check if the session is already full
+            if total_participants >= session.session_capacity:
+                messages.warning(request, 'Sorry, the session is already full. You cannot register.')
+                session = calculate_session_details(session, request.user)
+                # Render the updated inner HTML based on the new status
+                updated_inner_html = render_to_string('explore/htmx/explore_session_card_update.html', {'session': session}, request=request)
+
+                # Return the updated HTML as JSON response
+                return HttpResponse(updated_inner_html)
+
+    # Check if a participant instance already exists for the user and session
+    existing_participant = Participants.objects.filter(user=user, session=session).first()
+    if existing_participant:
+        # Check if it's more than 2 hours before the session
+        session_datetime = datetime.combine(session.date, datetime.min.time())
+        session_datetime_aware = make_aware(session_datetime, timezone=timezone.get_default_timezone())
+
+        allowed_status_change_time = session_datetime_aware - timedelta(hours=2)
+
+        if timezone.now() < allowed_status_change_time:
+            existing_participant.assistance_status = 'registered'
+            if existing_participant.user_plan.plan_pricing.plan.plan_type == 'limited':
+                existing_participant.user_plan = get_object_or_404(UserPlan, id=user_plan_id)
+            print(existing_participant.user_plan.id)
+            existing_participant.save()
+
+            messages.success(request, 'Participant status changed to registered successfully.')
+            session = calculate_session_details(session, request.user)
+
+            # Render the updated inner HTML based on the new status
+            updated_inner_html = render_to_string('explore/htmx/explore_session_card_update.html', {'session': session}, request=request)
+
+            # Return the updated HTML as JSON response
+            return HttpResponse(updated_inner_html)
+        
+        else:
+            messages.warning(request, 'You can not register again if you cancelled a session and the actual time is later than 2 hours before starting.')
+            session = calculate_session_details(session, request.user)
+            # Render the updated inner HTML based on the new status
+            updated_inner_html = render_to_string('explore/htmx/explore_session_card_update.html', {'session': session}, request=request)
+
+            # Return the updated HTML as JSON response
+            return HttpResponse(updated_inner_html)
+
+    # Create the participant instance
+    Participants.objects.create(
+        user=user,
+        session_id=session_id,
+        user_plan=user_plan,
+        assistance_status='registered',
+        # Add other fields as needed
+    )
+
+    messages.success(request, 'Participant created successfully.')
+    session = calculate_session_details(session, request.user)
+    # Render the updated inner HTML based on the new status
+    updated_inner_html = render_to_string('explore/htmx/explore_session_card_update.html', {'session': session}, request=request)
+
+    # Return the updated HTML as JSON response
+    return HttpResponse(updated_inner_html)
+
+@login_required(login_url='login')
+def explore_user_session_cancellation(request, session_id, user_plan_id):
+
+    user = request.user
+
+    # Validate if the provided user_plan_id corresponds to the request.user
+    user_plan = get_object_or_404(UserPlan, id=user_plan_id, user=user)
+
+    # Get the session using get_object_or_404
+    session = get_object_or_404(Session, id=session_id)
+
+    plan_pricing = user_plan.plan_pricing
+
+    # Validate if the plan pricing associated with the user plan has the same activity related to the session
+    activity_id_of_session = session.activity_id
+    if not plan_pricing.plan.activities.filter(id=activity_id_of_session).exists():
+        messages.error(request, 'User plan pricing does not match the activity of the session.')
+        session = calculate_session_details(session, request.user)
+        # Render the updated inner HTML based on the new status
+        updated_inner_html = render_to_string('explore/htmx/explore_session_card_update.html', {'session': session}, request=request)
+
+        # Return the updated HTML as JSON response
+        return HttpResponse(updated_inner_html)
+
+    # Check if a participant instance already exists for the user and session
+    participant = Participants.objects.filter(user=user, session=session).first()
+    if not participant:
+        messages.warning(request, 'You are not registered for this session.')
+        session = calculate_session_details(session, request.user)
+        # Render the updated inner HTML based on the new status
+        updated_inner_html = render_to_string('explore/htmx/explore_session_card_update.html', {'session': session}, request=request)
+
+        # Return the updated HTML as JSON response
+        return HttpResponse(updated_inner_html)
+
+    # Check if there are more than 2 hours left for the session to start
+    current_datetime = datetime.now()
+    session_start_datetime = datetime.combine(session.date, session.from_time)
+    time_difference = session_start_datetime - current_datetime
+
+    if time_difference.total_seconds() < 2 * 60 * 60:  # 2 hours in seconds
+        messages.warning(request, 'You cannot cancel the session as there are less than 2 hours left to start.')
+        session = calculate_session_details(session, request.user)
+        # Render the updated inner HTML based on the new status
+        updated_inner_html = render_to_string('explore/htmx/explore_session_card_update.html', {'session': session}, request=request)
+
+        # Return the updated HTML as JSON response
+        return HttpResponse(updated_inner_html)
+
+    # Check if there are participant instances with "present" or "absent" status
+    existing_present_absent_participants = Participants.objects.filter(
+        user=user,
+        session=session,
+        assistance_status__in=['present', 'absent']
+    ).exclude(id=participant.id)
+
+    if existing_present_absent_participants.exists():
+        messages.warning(request, 'Cannot cancel registration when participants have "present" or "absent" status.')
+        session = calculate_session_details(session, request.user)
+        # Render the updated inner HTML based on the new status
+        updated_inner_html = render_to_string('explore/htmx/explore_session_card_update.html', {'session': session}, request=request)
+
+        # Return the updated HTML as JSON response
+        return HttpResponse(updated_inner_html)
+
+    # Update the assistance status to 'cancelled'
+    participant.assistance_status = 'cancelled'
+    participant.save()
+
+    messages.success(request, 'Session cancellation successful.')
+    session = calculate_session_details(session, request.user)
+    # Render the updated inner HTML based on the new status
+    updated_inner_html = render_to_string('explore/htmx/explore_session_card_update.html', {'session': session}, request=request)
+
+    # Return the updated HTML as JSON response
+    return HttpResponse(updated_inner_html)
+
+@login_required(login_url='login')
+def explore_user_session_with_no_pricing(request, session_id,):
+    user = request.user
+
+    # Get the session using get_object_or_404
+    session = get_object_or_404(Session, id=session_id)
+    messages.warning(request, 'No pricing for this session, contact the owner.')
+    session = calculate_session_details(session, request.user)
+    # Render the updated inner HTML based on the new status
+    updated_inner_html = render_to_string('explore/htmx/explore_session_card_update.html', {'session': session}, request=request)
+
+    # Return the updated HTML as JSON response
+    return HttpResponse(updated_inner_html)
+
+
+@login_required(login_url='login')
+def session_info(request, session_id,):
+    
+    session = get_object_or_404(Session, id=session_id)
+    session = calculate_session_details(session, request.user)
+    # Render the updated inner HTML based on the new status
+    updated_inner_html = render_to_string('explore/htmx/session_info.html', {'session': session}, request=request)
+
+    # Return the updated HTML as JSON response
+    return HttpResponse(updated_inner_html)

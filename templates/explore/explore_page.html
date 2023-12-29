@@ -103,5 +103,133 @@
         {% include 'explore/htmx/explore_page_elements.html' %}
 
 </div>
+<!-- drawer component -->
+
+<div id="readProductDrawer" class="overflow-y-auto fixed top-0 left-0 z-50 p-4 w-full max-w-xs h-screen transition-transform -translate-x-full bg-gray-700" tabindex="-1" aria-labelledby="drawer-label" aria-hidden="true">
+    
+    
+</div>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Get all participant buttons
+        var participantButtons = document.querySelectorAll('[id^="participant_button_"]');
+
+        // Add click event listener to each participant button
+        participantButtons.forEach(function (button) {
+            button.addEventListener('click', function (event) {
+                // Prevent the default behavior (e.g., following the link)
+                event.preventDefault();
+
+                // Your logic or additional actions for the participant button click can go here
+
+                // Log to console for debugging
+                console.log('Participant button clicked');
+
+                // Stop the event propagation to prevent the drawer from opening
+                event.stopPropagation();
+            });
+        });
+    });
+</script>
+
+<script>
+    function openDrawer() {
+    var drawer = document.getElementById('readProductDrawer');
+
+    // Remove a class from the element
+    drawer.classList.remove('-translate-x-full');
+
+    // Add a class to the element
+    drawer.classList.add('transform-none');
+
+    drawer.setAttribute('role', 'dialog');
+    drawer.setAttribute('aria-modal', 'true');
+
+    // Remove an attribute from the element
+    drawer.removeAttribute('aria-hidden');
+
+    // Get the body element
+    var body = document.body;
+
+    // Add the overflow-hidden class to the body
+    body.classList.add('overflow-hidden');
+
+    // Create a new div element
+    var backdrop = document.createElement('div');
+
+    // Set attributes for the div element
+    backdrop.setAttribute('drawer-backdrop', '');
+    backdrop.classList.add('bg-gray-900', 'bg-opacity-50', 'dark:bg-opacity-80', 'fixed', 'inset-0', 'z-40');
+
+    // Add a click event listener to the backdrop element
+    backdrop.addEventListener('click', function () {
+        // Call the closeDrawer function when the backdrop is clicked
+        closeDrawer();
+    });
+    // Append the div element to the body
+    document.body.appendChild(backdrop);
+    // drawer.style.transform = 'translateX(0)';
+    // drawer.setAttribute('aria-hidden', 'false');
+
+    // Log to console for debugging
+    console.log('Drawer opened');
+
+}
+
+</script>
+
+<script>
+    function closeDrawer() {
+      var drawer = document.getElementById('readProductDrawer');
+        
+      // Remove a class from the element
+        drawer.classList.remove('transform-none');
+
+        // Add a class to the element
+        drawer.classList.add('-translate-x-full');
+
+        // Remove an attribute from the element
+        drawer.removeAttribute('role');
+        drawer.removeAttribute('aria-modal');
+        drawer.setAttribute('aria-hidden', 'true');
+
+        // Get the body element
+        var body = document.body;
+
+        // Add the overflow-hidden class to the body
+        body.classList.remove('overflow-hidden');
+
+        // Remove every element with the drawer-backdrop attribute
+        var backdrops = document.querySelectorAll('[drawer-backdrop]');
+        backdrops.forEach(function (backdrop) {
+            backdrop.remove();
+        });
+        // Log to console for debugging
+        console.log('Drawer closed');
+    }
+  
+    
+  </script>
+  
+
+<script>
+    document.addEventListener('htmx:afterSwap', (event) => {
+        // Reattach events for the new content
+        const newContent = event.detail.target;
+        const sessionCards = newContent.querySelectorAll('[id^="session_card_"]');
+
+        sessionCards.forEach((card) => {
+            const sessionId = card.id.replace('session_card_', '');
+            card.onclick = () => {
+                // Log to console for debugging
+                console.log('Session card clicked:', sessionId);
+                openDrawer();
+            };
+        });
+    });
+</script>
+
 
 {% endblock %}
