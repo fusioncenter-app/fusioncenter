@@ -42,7 +42,7 @@
                     border-gray-600
                     {% endif %} rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:ring-offset-gray-900 border-gray-600 placeholder-gray-400"
                 >
-                <p id="helper-checkbox-text" class="mt-2 text-xs font-normal text-left text-gray-500 dark:text-gray-400">{{ form.session_capacity.help_text|safe }}</p>
+                <p id="helper-checkbox-text" class="mt-2 text-xs font-normal text-left text-gray-400">{{ form.session_capacity.help_text|safe }}</p>
                 {% if form.session_capacity.errors %}
                 <div class="mt-2 text-sm text-left text-red-500">{{ form.session_capacity.errors }}</div>
                 {% endif %}
