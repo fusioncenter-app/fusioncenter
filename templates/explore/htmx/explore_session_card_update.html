@@ -74,7 +74,7 @@
                                             {% endif %}
                                         {% endif %}
                                         {% if session.participant.assistance_status == 'registered' %}
-                                        <div class="relative top-0 right-0 z-50">
+                                        
                                             <div id="participant_button_{{session.id}}" class="text-red-600" style="cursor: pointer;"
                                                 hx-get="{% url 'explore_user_session_cancellation' session.id session.participant.user_plan.id %}"
                                                 hx-target="#session_card_{{session.id}}"
@@ -85,7 +85,7 @@
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                 </svg>     
                                             </div>
-                                        </div>
+                                        
                                         {% endif %}
                                     {% endif %}
                                 {% else %}
