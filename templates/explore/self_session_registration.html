@@ -6,43 +6,54 @@
     <p class="text-md font-normal mx-auto mt-4 mb-1 text-white">{{ session.activity.name }}</p>
     <p class="text-md font-thin mx-auto mb-1  text-white">{{ session.date|date:"D d M y" }} </p>
     <p class="text-md font-thin mx-auto mb-4 text-white">{{ session.from_time|time:"H:i" }} - {{ session.to_time|time:"H:i" }}</p>
+    
     <form method="post" enctype="multipart/form-data" class="md:w-1/2 mx-auto">
         {% csrf_token %}
-
-        <div class="grid grid-cols-1 gap-4 mb-4">
-            <div>
-                <label for="{{ form.plan_pricing.id_for_label }}" class="text-left block mb-2 text-sm font-medium text-gray-900 text-white">
-                    {{ form.plan_pricing.label }}
-                </label>
-                <select name="{{ form.plan_pricing.name }}" id="{{ form.plan_pricing.id_for_label }}"
-                        class="w-full px-3 py-2 text-sm text-white bg-gray-700
-                               {% if form.plan_pricing.errors %}
-                                   border-red-500
-                               {% else %}
-                                   border-gray-600
-                               {% endif %}
-                               rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:ring-offset-gray-900 border-gray-600 placeholder-gray-400">
-                    <option value="" {% if not form.plan_pricing.value %}selected{% endif %} disable>Select Plan Pricing</option>
-                    {% for key, value in form.plan_pricing.field.choices %}
-                        <option value="{{ key }}" {% if key == form.plan_pricing.value %}selected{% endif %}>
-                            {{ value }} 
-                        </option>
-                    {% endfor %}
-                </select>
-                {% if form.plan_pricing.errors %}
-                    <div class="mt-2 text-sm text-left text-red-500">{{ form.plan_pricing.errors }}</div>
+        <ul class="grid w-full">
+            <label for="{{ form.plan_pricing.id_for_label }}" class="text-left block text-lg font-medium text-gray-900 text-white">
+                Select {{ form.plan_pricing.label }}
+            </label>
+            {% if form.plan_pricing.errors %}
+                    <div class="mb-2 text-sm text-left text-red-500">{{ form.plan_pricing.errors }}</div>
                 {% endif %}
-            </div>
-            
+            {% for key, value in form.plan_pricing.field.choices %}
+                <li class="my-2">
+                    <input type="radio" {% if value.sessions_left == '0' %} disabled {% endif %} id="{{ key }}" name="{{ form.plan_pricing.name }}" value="{{ key }}" class="hidden peer" required>
+                    <label for="{{ key }}" class="inline-flex items-center justify-between w-full px-5 py-3 text-gray-400 border border-gray-200 rounded-lg cursor-pointer  peer-checked:text-blue-500 peer-checked:border-blue-600 peer-checked:text-blue-600 bg-gray-800 {% if value.sessions_left != '0' %}  md:hover:text-white hmd:over:text-gray-600 md:hover:bg-gray-700 border-gray-700 {% else %} border-red-700 {% endif %}">                           
+                        
+                        <div class="inline-block text-left">
+                            {% if value.type == 'New Plans' %}
+                                <span class="text-xs font-medium px-2.5 py-1 rounded-full bg-green-900 text-green-300">New Plan</span>
+                                <div class="w-full text-left text-lg mt-2 font-semibold">{{ value.price }}</div>
+                            {% elif value.type == 'Existing Plans' %}
+                            <span class="text-xs font-medium px-2.5 py-1 rounded-full bg-gray-600 text-gray-200">Adquired Plan</span>
+                            <div class="w-full text-left text-lg mt-2 font-semibold">{{ value.price }}</div>
+                            {% endif %}
+                            
+                            
+                            <div class="ml-1 text-left">{{ value.value }}</div>
+                            {% if value.sessions_left %}
+                                <div class="ml-1 text-left">Sessions left: {{ value.sessions_left }}</div>
+                            {% endif %}
+                        </div>
+                        <svg class="w-5 h-5 ms-3 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9"/>
+                        </svg>
+                    </label>
+                </li>
+            {% endfor %}
+        </ul>
+
+        <div id="action_buttons" class="text-center mx-auto mt-6 flex justify-center space-x-4">
+            <a onclick="goBack()" class="flex-1 px-4 py-2 text-red-500 hover:text-red-700 text-sm font-medium border border-red-500 rounded-lg text-center sm:w-auto">Cancel</a>
+            <button type="submit" class="flex-1 px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-800 font-medium rounded-lg text-sm sm:w-auto">Register</button>
         </div>
 
-        <div id="action_buttons" class="text-center mx-auto mt-8 flex justify-center space-x-4">
-            <a onclick="goBack()" class="flex-1 px-4 py-2 text-red-500 hover:text-red-700 text-sm font-medium border border-red-500 rounded-lg text-center sm:w-auto">Cancel</a>
-            <button type="submit" class="flex-1 px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-800 font-medium rounded-lg text-sm sm:w-auto">Save</button>
-        </div>
-        
     </form>
-</div>
+    
+    
+        
+        
 
 <script>
     function goBack() {

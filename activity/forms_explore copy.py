@@ -37,28 +37,23 @@ class SelfRegistrationForm(forms.ModelForm):
         # print(self.fields['plan_pricing'].choices)
 
     def get_plan_pricing_choices(self):
+        # session = Session.objects.get(pk=self.session_id)
+        # print(self.user)
+        # print(self.session_id)
         existing_user_plan_pricings = self.get_available_user_plan_pricings()
         available_plan_pricings = self.get_available_plan_pricings()
 
+        # Create choices for the plan_pricing field
         choices = []
 
         for user_plan_pricing in existing_user_plan_pricings:
-            label = {
-                'type': 'Existing Plans',
-                'value': str(user_plan_pricing.plan_pricing),
-                'price': f'{user_plan_pricing.plan_pricing.price_unit} {user_plan_pricing.plan_pricing.price_quantity}',
-                'sessions_left': f'{user_plan_pricing.sessions_left}' if user_plan_pricing.plan_pricing.plan.plan_type == 'limited' else None,
-            }
-            choices.append((f'userplan-{user_plan_pricing.id}', label))
+            if user_plan_pricing.plan_pricing.plan.plan_type == 'limited':
+                choices.append((f'userplan-{user_plan_pricing.id}', f'Existing Plan - {user_plan_pricing.plan_pricing} | {user_plan_pricing.plan_pricing.price_unit} {user_plan_pricing.plan_pricing.price_quantity} | Sessions Left: {user_plan_pricing.sessions_left}'))
+            else:
+                choices.append((f'userplan-{user_plan_pricing.id}', f'Existing Plan - {user_plan_pricing.plan_pricing} | {user_plan_pricing.plan_pricing.price_unit} {user_plan_pricing.plan_pricing.price_quantity}'))
 
         for plan_pricing in available_plan_pricings:
-            label = {
-                'type': 'New Plans',
-                'value': str(plan_pricing),
-                'price': f'{plan_pricing.price_unit} {plan_pricing.price_quantity}',
-                'quantity': plan_pricing.sessions_quantity,
-            }
-            choices.append((f'planpricing-{plan_pricing.id}', label))
+            choices.append((f'planpricing-{plan_pricing.id}', f'New Plan - {plan_pricing} | {plan_pricing.price_unit} {plan_pricing.price_quantity}'))
 
         return choices
 
