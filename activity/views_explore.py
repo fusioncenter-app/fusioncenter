@@ -317,7 +317,7 @@ def explore_user_session_cancellation(request, session_id, user_plan_id):
     time_difference = session_start_datetime - current_datetime
 
     if time_difference.total_seconds() < 2 * 60 * 60:  # 2 hours in seconds
-        messages.warning(request, 'You cannot cancel the session as there are less than 2 hours left to start.')
+        messages.warning(request, 'You can not cancel your participation as there are less than 2 hours left to start.')
         session = calculate_session_details(session, request.user)
         # Render the updated inner HTML based on the new status
         updated_inner_html = render_to_string('explore/htmx/explore_session_card_update.html', {'session': session}, request=request)
