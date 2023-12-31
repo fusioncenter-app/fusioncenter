@@ -51,7 +51,10 @@ def login_view(request):
                 try:
                     user = authenticate(request, username=email, password=password)
                     login(request, user)
-                    return redirect('home')  # Redirect to the home page after successful login
+
+                    # Redirect to the next parameter or a default URL
+                    next_url = request.GET.get('next', reverse('home'))
+                    return redirect(next_url)
                 except:
                     # Handle invalid login (e.g., show an error message)
                     error_message = "Invalid credentials. Please try again."
