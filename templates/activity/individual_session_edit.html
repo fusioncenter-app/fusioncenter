@@ -132,9 +132,27 @@
         </div>
         
         <div id="action_buttons" class="text-center mx-auto mt-8 flex justify-center space-x-4">
-            <a href="{% url 'activity_detail' activity.id %}" class="flex-1 px-4 py-2 text-red-500 hover:text-red-700 text-sm font-medium border border-red-500 rounded-lg text-center sm:w-auto">Cancel</a>
+            <a onclick="goBackOrRedirect()" class="flex-1 px-4 py-2 text-red-500 hover:text-red-700 text-sm font-medium border border-red-500 rounded-lg text-center sm:w-auto">Cancel</a>
             <button type="submit" class="flex-1 px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-800 font-medium rounded-lg text-sm sm:w-auto">Save</button>
         </div>
     </form>
 </div>
+
+<script>
+    function goBackOrRedirect() {
+        // Check the referring URL
+        const referringUrlEditActivity = document.referrer;
+
+        // Check if the referring URL contains the space_calendar URL
+        if (referringUrlEditActivity.includes("/plan_pricing_session_list/")) {
+            window.history.back();
+        } else if (referringUrlEditActivity.includes("/activity_detail/")) {
+            window.history.back();
+
+        } else {
+            // If not from space_calendar or plan_detail, navigate to the activity list view
+            window.location.replace("{% url 'activity_detail' activity.id %}");
+        }
+    }
+</script>
 {% endblock %}
