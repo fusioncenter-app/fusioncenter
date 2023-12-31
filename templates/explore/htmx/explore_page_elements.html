@@ -14,7 +14,7 @@
                     <h5 class="mb-2 inline text-sm md:text-lg whitespace-nowrap font-semibold tracking-tight text-white">{{ session.from_time|time:"H:i" }}</h5>
                 </div>
             
-                <div class="flex flex-col items-start my-2 ml-4 ml-0 md:ml-12 flex-1">
+                <div class="flex flex-col items-start md:my-3 my-2 ml-4 ml-0 md:ml-12 flex-1">
                     <h5 class="mb-1 text-lg md:text-2xl font-bold tracking-tight text-white "> {{session.activity}}</h5>
                     <h5 class="mb-1 text-md md:text-lg tracking-tight text-white">{{ session.activity.instructor.user.get_full_name }} </h5>
                     <h5 class="mb-1 text-sm md:text-md font-thin tracking-tight text-white">{{ session.activity.site.institution.name }} - {{ session.activity.site.name }} </h5>
@@ -30,7 +30,7 @@
                     {% endif %}
                 </div>
                 <div class="grid grid-rows-6 grid-flow-col h-24">
-                    <div class="row-start-1 row-span-2 flex mt-2 mr-2 justify-end">
+                    <div class="row-start-1 row-span-2 flex md:my-3 my-2  mr-2 justify-end">
                         
                         {% if user.is_authenticated %}
                             {% if session.participant == None %}
@@ -105,7 +105,7 @@
                             {% endif %}
 
                     </div>
-                    <div class="row-start-4 mt-auto"><div id="other_content" class="flex flex-col mr-2 text-right items-end">
+                    <div class="row-end-5 mt-auto"><div id="other_content" class="flex flex-col mr-2 text-right items-end">
                         <div class="text-md tracking-tight text-white overflow-hidden whitespace-nowrap max-w-[20ch]">
                             {% if session.availability > 0 %}{{session.availability}}{% else %}0{% endif %} Spots
                         </div>
