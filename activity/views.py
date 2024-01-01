@@ -535,12 +535,27 @@ def user_session_cancellation(request, session_id, user_plan_id):
         messages.warning(request, 'You are not registered for this session.')
         return redirect('participant_plan_pricing_sessions', user_plan_id=user_plan_id)
 
-    # Check if there are more than 2 hours left for the session to start
-    current_datetime = datetime.now()
-    session_start_datetime = datetime.combine(session.date, session.from_time)
-    time_difference = session_start_datetime - current_datetime
+    # Get user's timezone from the cookie
+    user_timezone_str = request.COOKIES.get('user_timezone', 'UTC')  # Default to UTC if not found
+    user_timezone = pytz_timezone(user_timezone_str)
 
-    if time_difference.total_seconds() < 2 * 60 * 60:  # 2 hours in seconds
+    # Get the current time in the user's timezone
+    user_current_time = timezone.now().astimezone(user_timezone)
+
+    # Check if it's more than 2 hours before the session
+    session_datetime = datetime.combine(session.date, session.from_time)
+    
+    # Convert session datetime to user's timezone without changing its time
+    session_datetime_aware = make_aware(session_datetime, timezone=user_timezone)
+    
+    # print("Session Datetime (User's Timezone):", session_datetime_aware)
+
+    allowed_status_change_time = session_datetime_aware - timedelta(hours=2)
+
+    # print("User Current Time:", user_current_time)
+    # print("Allowed Status Change Time:", allowed_status_change_time)
+
+    if user_current_time > allowed_status_change_time:
         messages.warning(request, 'You cannot cancel the session as there are less than 2 hours left to start.')
         return redirect('participant_plan_pricing_sessions', user_plan_id=user_plan_id)
 
