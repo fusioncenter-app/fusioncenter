@@ -109,7 +109,7 @@ class ExplorePageView(View):
                 sessions = sessions.filter(activity__instructor__in=instructors)
         else:
             # If no filters, get all sessions after today
-            sessions = Session.objects.filter(date__gte=today).order_by('date')
+            sessions = Session.objects.filter(date__gte=today).order_by('date','from_time')
 
         # Paginate the sessions first
         page = self.request.GET.get('page', 1)

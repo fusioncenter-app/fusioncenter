@@ -1,0 +1,273 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="md:mx-24 md:pt-2 pt-2 mx-2">
+    
+    <div class="flex justify-between items-center mt-2 mb-4">
+        <h3 class="w-8/12 text-2xl font-bold text-white">My Sessions</h3>
+        <button data-modal-target="medium-modal" data-modal-toggle="medium-modal" class="inline block ml-8 w-auto text-white focus:ring-4 focus:outline-none  font-medium rounded-lg text-sm px-5 py-2.5 text-center bg-gray-600 hover:bg-gray-700 focus:ring-gray-800" type="button" >
+            Filters
+            </button>
+        <!-- Default Modal -->
+        <div id="medium-modal" tabindex="-1" class="fixed top-0 left-0 right-0 z-50 hidden w-full overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full">
+            <div class="relative w-full max-w-lg max-h-full">
+                <!-- Modal content -->
+                <div class="relative rounded-lg shadow bg-gray-700">
+                    <!-- Modal header -->
+                    <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t border-gray-600">
+                        <h3 class="text-xl font-medium text-white">
+                            Filters
+                        </h3>
+                        <button type="button" class="text-gray-400 bg-transparent rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center hover:bg-gray-600 hover:text-white" data-modal-hide="medium-modal">
+                            <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                            </svg>
+                            <span class="sr-only">Close modal</span>
+                        </button>
+                    </div>
+                    <!-- Modal body -->
+                    <form id="filters-form" hx-get="{% url 'my_sessions' %}" hx-target="#session_list" hx-push-url>
+                        <div>
+                            <div id="accordion-flush" data-accordion="collapse" data-active-classes="bg-gray-800 text-white" data-inactive-classes="">
+                                <h2 id="accordion-flush-heading-1">
+                                <button type="button" class="flex items-center justify-between w-full py-5 mr-2 font-medium rtl:text-right border-b border-gray-700 text-gray-400 gap-3" data-accordion-target="#accordion-flush-body-1" aria-expanded="false" aria-controls="accordion-flush-body-1">
+                                    <span class="ml-4">Site</span>
+                                    <svg data-accordion-icon class="w-3 h-3 mr-4 rotate-180 shrink-0" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5 5 1 1 5"/>
+                                    </svg>
+                                </button>
+                                </h2>
+                                <div id="accordion-flush-body-1" class="hidden" aria-labelledby="accordion-flush-heading-1">
+                                <div class="p-5 border-b border-gray-700">
+                                    {% for choice_id, choice_label in form.sites.field.choices %}
+                                        <div class="flex items-center mb-4">
+                                            <input autofocus name="{{form.sites.name}}" id="site_id_{{ forloop.counter0 }}" type="checkbox" value="{{choice_id}}" class="w-4 h-4 text-blue-600 rounded focus:ring-blue-600 ring-offset-gray-800 ring-2 bg-gray-700 border-gray-400">
+                                            <label for="site_id_{{ forloop.counter0 }}" class="ms-2 text-sm font-medium text-gray-300">{{choice_label}}</label>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                </div>
+                                <h2 id="accordion-flush-heading-2">
+                                <button type="button" class="flex items-center justify-between w-full py-5 font-medium rtl:text-right border-b border-gray-700 text-gray-400 gap-3" data-accordion-target="#accordion-flush-body-2" aria-expanded="false" aria-controls="accordion-flush-body-2">
+                                    <span class="ml-4">Discipline</span>
+                                    <svg data-accordion-icon class="mr-4  w-3 h-3 rotate-180 shrink-0" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5 5 1 1 5"/>
+                                    </svg>
+                                </button>
+                                </h2>
+                                <div id="accordion-flush-body-2" class="hidden" aria-labelledby="accordion-flush-heading-2">
+                                <div class="p-5 border-b border-gray-700">
+                                    {% for choice_id, choice_label in form.disciplines.field.choices %}
+                                        <div class="flex items-center mb-4">
+                                            <input name="{{form.disciplines.name}}" id="discipline_id_{{ forloop.counter0 }}" type="checkbox" value="{{choice_id}}" class="w-4 h-4 text-blue-600 rounded focus:ring-blue-600 ring-offset-gray-800 focus:ring-2 bg-gray-700 border-gray-400">
+                                            <label for="discipline_id_{{ forloop.counter0 }}" class="ms-2 text-sm font-medium text-gray-300">{{choice_label}}</label>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                </div>
+                                <h2 id="accordion-flush-heading-3">
+                                    <button type="button" class="flex items-center justify-between w-full py-5 font-medium rtl:text-right border-b border-gray-700 text-gray-400 gap-3" data-accordion-target="#accordion-flush-body-3" aria-expanded="false" aria-controls="accordion-flush-body-3">
+                                        <span class="ml-4">Instructors</span>
+                                        <svg data-accordion-icon class="mr-4  w-3 h-3 rotate-180 shrink-0" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5 5 1 1 5"/>
+                                        </svg>
+                                    </button>
+                                    </h2>
+                                    <div id="accordion-flush-body-3" class="hidden" aria-labelledby="accordion-flush-heading-3">
+                                    <div class="p-5 border-b border-gray-700">
+                                        {% for choice_id, choice_label in form.instructors.field.choices %}
+                                            <div class="flex items-center mb-4">
+                                                <input name="{{form.instructors.name}}" id="instructor_id_{{ forloop.counter0 }}" type="checkbox" value="{{choice_id}}" class="w-4 h-4 text-blue-600 rounded focus:ring-blue-600 ring-offset-gray-800 focus:ring-2 bg-gray-700 border-gray-400">
+                                                <label for="instructor_id_{{ forloop.counter0 }}" class="ms-2 text-sm font-medium text-gray-300">{{ choice_label }}</label>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                    </div>
+                            </div>
+                        </div>
+                    
+                    </form>
+                    <!-- Modal footer -->
+                    <div class="flex items-center p-4 md:p-5 border-t rounded-b border-gray-600">
+                        <button data-modal-hide="medium-modal" type="button" class="ml-auto  focus:ring-4 focus:outline-none rounded-lg border text-sm font-medium px-5 py-2.5 focus:z-10 bg-gray-700 text-gray-300 border-gray-500 hover:text-white hover:bg-gray-600 focus:ring-gray-600">Cancel</button>
+                        <button data-modal-hide="medium-modal" type="submit" form="filters-form" class="ms-3 text-white focus:ring-4 focus:outline-none font-medium rounded-lg text-sm px-5 py-2.5 text-center bg-blue-600 hover:bg-blue-700 focus:ring-blue-800">
+                            Accept
+                        </button>
+                    </div>
+                
+                </div>
+            </div>
+        </div>
+    </div>
+
+        {% include 'my_sessions/htmx/session_list_elements.html' %}
+    
+</div>
+<!-- drawer component -->
+
+<div id="readProductDrawer" class="overflow-y-auto fixed top-0 left-0 z-50 p-4 w-full max-w-xs h-screen transition-transform -translate-x-full bg-gray-700" tabindex="-1" aria-labelledby="drawer-label" aria-hidden="true">
+    
+    <div role="status" class="max-w-sm animate-pulse">
+        <div class="h-2.5 bg-gray-600 rounded-full w-48 mb-4"></div>
+        <div class="h-2 bg-gray-600 rounded-full  max-w-[360px] mb-2.5"></div>
+        <div class="h-2 bg-gray-600 rounded-full mb-2.5"></div>
+        <div class="h-2 bg-gray-600 rounded-full max-w-[330px] mb-2.5"></div>
+        <div class="h-2 bg-gray-600 rounded-full max-w-[300px] mb-2.5"></div>
+        <div class="h-2 bg-gray-600 rounded-full max-w-[360px]"></div>
+        <div class="h-2 bg-gray-600 rounded-full max-w-[360px]"></div>
+        <span class="sr-only">Loading...</span>
+    </div>
+    
+</div>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Get all participant buttons
+        var participantButtons = document.querySelectorAll('[id^="participant_button_"]');
+
+        // Add click event listener to each participant button
+        participantButtons.forEach(function (button) {
+            button.addEventListener('click', function (event) {
+                // Prevent the default behavior (e.g., following the link)
+                event.preventDefault();
+
+                // Your logic or additional actions for the participant button click can go here
+
+                // Log to console for debugging
+                console.log('Participant button clicked');
+
+                // Stop the event propagation to prevent the drawer from opening
+                event.stopPropagation();
+            });
+        });
+    });
+</script>
+
+<script>
+    document.addEventListener('htmx:afterSwap', (event) => {
+        // Get all participant buttons
+        var participantButtons = document.querySelectorAll('[id^="participant_button_"]');
+
+        // Add click event listener to each participant button
+        participantButtons.forEach(function (button) {
+            button.addEventListener('click', function (event) {
+                // Prevent the default behavior (e.g., following the link)
+                event.preventDefault();
+
+                // Your logic or additional actions for the participant button click can go here
+
+                // Log to console for debugging
+                console.log('Participant button clicked 2');
+
+                // Stop the event propagation to prevent the drawer from opening
+                event.stopPropagation();
+            });
+        });
+    });
+</script>
+
+
+<script>
+    function openDrawer() {
+    var drawer = document.getElementById('readProductDrawer');
+
+    // Remove a class from the element
+    drawer.classList.remove('-translate-x-full');
+
+    // Add a class to the element
+    drawer.classList.add('transform-none');
+
+    drawer.setAttribute('role', 'dialog');
+    drawer.setAttribute('aria-modal', 'true');
+
+    // Remove an attribute from the element
+    drawer.removeAttribute('aria-hidden');
+
+    // Get the body element
+    var body = document.body;
+
+    // Add the overflow-hidden class to the body
+    body.classList.add('overflow-hidden');
+
+    // Create a new div element
+    var backdrop = document.createElement('div');
+
+    // Set attributes for the div element
+    backdrop.setAttribute('drawer-backdrop', '');
+    backdrop.classList.add('bg-gray-900', 'bg-opacity-80', 'fixed', 'inset-0', 'z-40');
+
+    // Add a click event listener to the backdrop element
+    backdrop.addEventListener('click', function () {
+        // Call the closeDrawer function when the backdrop is clicked
+        closeDrawer();
+    });
+    // Append the div element to the body
+    document.body.appendChild(backdrop);
+    // drawer.style.transform = 'translateX(0)';
+    // drawer.setAttribute('aria-hidden', 'false');
+
+    // Log to console for debugging
+    console.log('Drawer opened');
+
+}
+
+</script>
+
+<script>
+    function closeDrawer() {
+      var drawer = document.getElementById('readProductDrawer');
+        
+      // Remove a class from the element
+        drawer.classList.remove('transform-none');
+
+        // Add a class to the element
+        drawer.classList.add('-translate-x-full');
+
+        // Remove an attribute from the element
+        drawer.removeAttribute('role');
+        drawer.removeAttribute('aria-modal');
+        drawer.setAttribute('aria-hidden', 'true');
+
+        // Get the body element
+        var body = document.body;
+
+        // Add the overflow-hidden class to the body
+        body.classList.remove('overflow-hidden');
+
+        // Remove every element with the drawer-backdrop attribute
+        var backdrops = document.querySelectorAll('[drawer-backdrop]');
+        backdrops.forEach(function (backdrop) {
+            backdrop.remove();
+        });
+
+        // Create a new div element for the loading spinner
+        var loadingSpinner = document.createElement('div');
+        loadingSpinner.setAttribute('role', 'status');
+        loadingSpinner.classList.add('max-w-sm', 'animate-pulse');
+
+        // Add loading spinner HTML
+        loadingSpinner.innerHTML = `
+            <div class="h-2.5 bg-gray-600 rounded-full w-48 mb-4"></div>
+            <div class="h-2 bg-gray-600 rounded-full max-w-[360px] mb-2.5"></div>
+            <div class="h-2 bg-gray-600 rounded-full mb-2.5"></div>
+            <div class="h-2 bg-gray-600 rounded-full max-w-[330px] mb-2.5"></div>
+            <div class="h-2 bg-gray-600 rounded-full max-w-[300px] mb-2.5"></div>
+            <div class="h-2 bg-gray-600 rounded-full max-w-[360px]"></div>
+            <div class="h-2 bg-gray-600 rounded-full max-w-[360px]"></div>
+            <span class="sr-only">Loading...</span>
+        `;
+
+        // Append the loading spinner to the drawer
+        drawer.innerHTML = '';
+        drawer.appendChild(loadingSpinner);
+        // Log to console for debugging
+        console.log('Drawer closed');
+    }
+  
+    
+  </script>
+
+
+
+{% endblock %}
