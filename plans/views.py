@@ -13,7 +13,8 @@ from django.db import models
 from datetime import date
 
 from django.db.models import F,Count,Q
-
+from django.template.loader import render_to_string
+from django.http import HttpResponse
 
 def is_institution_owner(user):
     return user.groups.filter(name='InstitutionOwner').exists()
@@ -377,7 +378,15 @@ def participant_plan_list(request):
 
     return render(request, 'participant/plan_list.html', {'plans_by_site': plans_by_site})
 
+@login_required(login_url='login')
+def plan_info_htmx(request, plan_id,):
+    
+    plan = get_object_or_404(Plan, id=plan_id)
+    
+    # Render the updated inner HTML based on the new status
+    updated_inner_html = render_to_string('plans/htmx/plan_info.html', {'plan': plan}, request=request)
 
+    return HttpResponse(updated_inner_html)
 
 @login_required(login_url='login')
 def participant_plan_detail(request, plan_id):
@@ -393,7 +402,7 @@ def participant_plan_detail(request, plan_id):
         return render(request, 'participant/not_assigned.html')
 
     # Get all plan pricings assigned to the user for the specified plan
-    user_plan_pricings = PlanPricing.objects.filter(userplan__in=user_plans)
+    # user_plan_pricings = PlanPricing.objects.filter(userplan__in=user_plans)
 
     context = {
         'plan': plan,

@@ -8,6 +8,7 @@ from urllib.parse import urlparse
 import re
 
 from .views_explore import *
+from .views_my_sessions import *
 
 
 from .forms import ActivityCreateForm,ActivityEditForm, IndividualSessionForm, IndividualSessionEditForm, MultipleSessionCreationForm, CalendarCreateSessionForm, ParticipantRegistrationForm
@@ -447,18 +448,34 @@ def user_session_registration(request, session_id, user_plan_id):
 
     # Check if a participant instance already exists for the user and session
     existing_participant = Participants.objects.filter(user=user, session=session).first()
+    
     if existing_participant:
+        # Get user's timezone from the cookie
+        user_timezone_str = request.COOKIES.get('user_timezone', 'UTC')  # Default to UTC if not found
+        user_timezone = pytz_timezone(user_timezone_str)
+
+        # Get the current time in the user's timezone
+        user_current_time = timezone.now().astimezone(user_timezone)
+
         # Check if it's more than 2 hours before the session
-        session_datetime = datetime.combine(session.date, datetime.min.time())
-        session_datetime_aware = make_aware(session_datetime, timezone=timezone.get_default_timezone())
+        session_datetime = datetime.combine(session.date, session.from_time)
+        
+        # Convert session datetime to user's timezone without changing its time
+        session_datetime_aware = make_aware(session_datetime, timezone=user_timezone)
+        
+        print("Session Datetime (User's Timezone):", session_datetime_aware)
 
         allowed_status_change_time = session_datetime_aware - timedelta(hours=2)
 
-        if timezone.now() < allowed_status_change_time:
+        print("User Current Time:", user_current_time)
+        print("Allowed Status Change Time:", allowed_status_change_time)
+
+        if user_current_time < allowed_status_change_time:
             existing_participant.assistance_status = 'registered'
             if existing_participant.user_plan.plan_pricing.plan.plan_type == 'limited':
                 existing_participant.user_plan = get_object_or_404(UserPlan, id=user_plan_id)
-            print(existing_participant.user_plan.id)
+
+            # print(existing_participant.user_plan.id)
             existing_participant.save()
             messages.success(request, 'Participant status changed to registered successfully.')
             return redirect('participant_plan_pricing_sessions', user_plan_id=user_plan_id)

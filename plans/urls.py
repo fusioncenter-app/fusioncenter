@@ -6,7 +6,8 @@ from .views import (
     assign_user_plan, edit_user_plan,
     
     participant_plan_list, participant_plan_detail, participant_plan_pricing_sessions,
-    plan_pricing_session_list,participant_plan_pricing_session_list
+    plan_pricing_session_list,participant_plan_pricing_session_list,
+    plan_info_htmx
 )
 
 urlpatterns = [
@@ -26,6 +27,8 @@ urlpatterns = [
     path('participant_plan_detail/<int:plan_id>/', participant_plan_detail, name='participant_plan_detail'),
     path('session_list/<int:user_plan_id>/', participant_plan_pricing_sessions, name='participant_plan_pricing_sessions'),
     path('plan_pricing_session_list/<int:plan_pricing_id>/', plan_pricing_session_list, name='plan_pricing_session_list'),
+    # htmx
+    path('plan_info_htmx/<int:plan_id>', plan_info_htmx, name='plan_info_htmx'),
     
 
 ]

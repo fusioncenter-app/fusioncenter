@@ -11,7 +11,7 @@
         {% csrf_token %}
         <ul class="grid w-full">
             <label for="{{ form.plan_pricing.id_for_label }}" class="text-left block text-lg font-medium text-gray-900 text-white">
-                Select {{ form.plan_pricing.label }}
+                Select Pricing Plan
             </label>
             {% if form.plan_pricing.errors %}
                     <div class="mb-2 text-sm text-left text-red-500">{{ form.plan_pricing.errors }}</div>
