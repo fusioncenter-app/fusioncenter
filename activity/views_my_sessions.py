@@ -63,7 +63,7 @@ class MySessionsPageView(LoginRequiredMixin, View):
 
         # print("Updated Referring URL:", updated_referring_url)
 
-        form = MySessionsFiltersForm(request.user)
+        form = MySessionsFiltersForm(request.user, request.GET or None)
         # Filter sessions to exclude those that occurred yesterday or before
         today = today_date.today()
 
