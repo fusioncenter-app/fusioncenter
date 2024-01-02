@@ -22,30 +22,6 @@ class FiltersForm(forms.Form):
 
         self.fields['instructors'].choices = instructor_choices
 
-class MySessionsFiltersForm(forms.Form):
-    sites = forms.ModelMultipleChoiceField(queryset=Site.objects.all(), widget=forms.CheckboxSelectMultiple, required=False)
-    disciplines = forms.MultipleChoiceField(choices=Activity.TYPE_CHOICES, widget=forms.CheckboxSelectMultiple, required=False)
-    instructors = forms.ModelMultipleChoiceField(queryset=Instructor.objects.all(), widget=forms.CheckboxSelectMultiple, required=False)
-
-    def __init__(self, user, *args, **kwargs):
-        super(MySessionsFiltersForm, self).__init__(*args, **kwargs)
-
-         # Set the queryset for the 'sites' field based on the user's participant sessions
-        participant_sessions = user.participants_set.values_list('session__activity__site', flat=True).distinct()
-        self.fields['sites'].queryset = Site.objects.filter(id__in=participant_sessions).distinct()
-
-        # Set the queryset for the 'disciplines' field based on the user's participant sessions
-        participant_disciplines = user.participants_set.values_list('session__activity__type', flat=True).distinct()
-        self.fields['disciplines'].choices = [(discipline, discipline) for discipline in participant_disciplines]
-
-        # Set the queryset for the 'instructors' field based on the user's participant sessions
-        participant_instructors = user.participants_set.values_list('session__activity__instructor', flat=True).distinct()
-        instructors = Instructor.objects.filter(id__in=participant_instructors).distinct()
-
-        # Customize choice labels for instructors
-        instructor_choices = [(instructor.pk, instructor.user.get_full_name()) for instructor in instructors]
-        self.fields['instructors'].choices = instructor_choices
-
 class SelfRegistrationForm(forms.ModelForm):
     plan_pricing = forms.ChoiceField(label='Plan Pricing', widget=forms.Select())
 
