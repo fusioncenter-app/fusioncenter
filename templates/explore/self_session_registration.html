@@ -7,6 +7,7 @@
     <p class="text-md font-thin mx-auto mb-1  text-white">{{ session.date|date:"D d M y" }} </p>
     <p class="text-md font-thin mx-auto mb-4 text-white">{{ session.from_time|time:"H:i" }} - {{ session.to_time|time:"H:i" }}</p>
     
+    {% if form.plan_pricing.field.choices %}
     <form method="post" enctype="multipart/form-data" class="md:w-1/2 mx-auto">
         {% csrf_token %}
         <ul class="grid w-full">
@@ -50,6 +51,16 @@
         </div>
 
     </form>
+    {% else %}
+    <div class="md:w-1/2 mx-auto">
+        <p class="text-xl mt-2 text-white">
+        You can no register to this session.
+    </p>
+        <div id="action_buttons" class="text-center mx-auto mt-6 flex justify-center space-x-4">
+            <a onclick="goBack()" class="flex-1 px-4 py-2 text-gray-300 hover:text-gray-500 text-sm font-medium border border-gray-300 rounded-lg text-center sm:w-auto">Go Back</a>
+        </div>
+    </div>
+    {% endif %}
     
     
         
