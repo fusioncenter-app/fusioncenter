@@ -1,12 +1,22 @@
 from django.urls import path
-from . import views
+from .views import (
+    InstitutionDetailView,
+    CreateSiteView,
+    EditSiteView,
+    CreateSpaceView,  
+    EditSpaceView, 
+    instructor_list,
+    create_instructor,
+    delete_instructor,
+)
+
 
 urlpatterns = [
-    path('institution_detail/', views.institution_detail, name='institution_detail'),
-    path('create_site/', views.create_site, name='create_site'),
-    path('edit_site/<int:site_id>/', views.edit_site, name='edit_site'),
-    path('create_space/<int:site_id>/', views.create_space, name='create_space'),
-    path('edit_space/<int:space_id>/', views.edit_space, name='edit_space'),
+    path('intitution/detail/', InstitutionDetailView.as_view(), name='institution_detail'),
+    path('site/create_site/', CreateSiteView.as_view(), name='create_site'),
+    path('site/edit_site/<int:site_id>/', EditSiteView.as_view(), name='edit_site'),
+    path('space/create_space/<int:site_id>/', CreateSpaceView.as_view(), name='create_space'),
+    path('space/edit_space/<int:space_id>/', EditSpaceView.as_view(), name='edit_space'),
 
     # # Staff URLs
     # path('staff_list/', views.staff_list, name='staff_list'),
@@ -15,7 +25,7 @@ urlpatterns = [
     # path('delete_staff/<int:staff_id>/', views.delete_staff, name='delete_staff'),
 
     # Instructor URLs
-    path('instructor_list/', views.instructor_list, name='instructor_list'),
-    path('create_instructor/', views.create_instructor, name='create_instructor'),
-    path('delete_instructor/<int:instructor_id>/', views.delete_instructor, name='delete_instructor'),
+    path('instructor_list/', instructor_list, name='instructor_list'),
+    path('create_instructor/', create_instructor, name='create_instructor'),
+    path('delete_instructor/<int:instructor_id>/', delete_instructor, name='delete_instructor'),
 ]

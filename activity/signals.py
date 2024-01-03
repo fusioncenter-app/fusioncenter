@@ -4,7 +4,7 @@ from django.db.models.signals import post_save, pre_save, post_delete
 from django.dispatch import receiver
 from activity.models import Session, Participants
 from plans.models import UserPlan
-from .utils import should_participate, add_participant, remove_participant
+from .utils.signal_utils import should_participate, add_participant, remove_participant
 
 @receiver(post_save, sender=Session)
 def update_participants(sender, instance, **kwargs):

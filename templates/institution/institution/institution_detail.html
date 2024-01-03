@@ -4,12 +4,16 @@
 <div class="md:mx-24 md:pt-2 pt-2 mx-2">
     <div class="flex justify-between items-center mt-2 mb-4">
         <h3 class="text-2xl font-bold text-white overflow-hidden whitespace-nowrap max-w-[20ch] overflow-ellipsis">{{ institution.name }}</h3>
-        <a href="{% url 'create_site' %}" class="flex items-center focus:outline-none text-white focus:ring-4 font-medium rounded-lg text-sm px-2 py-2 bg-green-600 hover:bg-green-700 focus:ring-green-800">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-            <span class="hidden lg:inline mx-2">Site</span>
-        </a>
+        {% for group in user.groups.all %}
+            {% if group.name == 'InstitutionOwner' %}
+                <a href="{% url 'create_site' %}" class="flex items-center focus:outline-none text-white focus:ring-4 font-medium rounded-lg text-sm px-2 py-2 bg-green-600 hover:bg-green-700 focus:ring-green-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                    <span class="hidden lg:inline mx-2">Site</span>
+                </a>
+            {% endif %}
+        {% endfor %}
     </div>
     
 

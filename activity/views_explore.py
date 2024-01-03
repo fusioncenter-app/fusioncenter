@@ -148,7 +148,7 @@ class SessionRegistrationView(LoginRequiredMixin, View):
         session = get_object_or_404(Session, pk=session_id)
         user = request.user
         form = SelfRegistrationForm(session_id=session_id, user=user)
-        return render(request, self.template_name, {'form': form, 'session': session})
+        return render(request, self.template_name, {'form': form,'today': today_date.today(), 'session': session})
 
     def post(self, request, session_id):
         session = get_object_or_404(Session, pk=session_id)
@@ -156,11 +156,18 @@ class SessionRegistrationView(LoginRequiredMixin, View):
         form = SelfRegistrationForm(session_id=session_id, user=user, data=request.POST)
 
         if form.is_valid():
-            form.save()
-            messages.success(request, 'You were registered successfully.')
-            return redirect('explore_page')
-        else:
-            return render(request, self.template_name, {'form': form, 'session': session})
+            session_date = session.date
+            
+            # Check if the registration is for a session happening today or in the past
+            if session_date is not None and session_date >= datetime.today().date():
+                form.save()
+                messages.success(request, 'You were registered successfully.')
+                return redirect('explore_page')
+            else:
+                messages.error(request, 'Invalid registration date. Please choose a date on or before today.')
+                return render(request, self.template_name, {'form': form, 'session': session})
+
+        return render(request, self.template_name, {'form': form, 'session': session})
 
 
 @login_required(login_url='login')

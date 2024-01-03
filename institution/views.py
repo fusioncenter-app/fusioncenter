@@ -1,68 +1,107 @@
 # views.py
 
 from django.shortcuts import render, get_object_or_404, redirect
+from django.views import View
+from django.contrib.auth.decorators import login_required, user_passes_test
+
+
 from .models import Institution, Site, Space, Staff, Instructor
-from custom_user.models import User
-
 from .forms import SiteForm, SpaceForm, StaffForm, InstructorForm
+from custom_user.models import User
+from .utils.permissions_utils import is_institution_owner, is_institution_instructor, is_institution_staff, is_owner_of_site, is_staff_responsible_for_site, is_owner_of_space, is_staff_responsible_for_space
 
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
 
-@login_required(login_url='login')
-def institution_detail(request):
-    # Get the logged-in user
-    user = request.user
 
-    # If the user is not authenticated, redirect them to the login page
-    if not user.is_authenticated:
-        return redirect('login')  # Make sure to replace 'login' with your actual login URL
+class InstitutionDetailView(View):
 
-    # If the user is an InstitutionOwner, retrieve their institution directly
-    if user.groups.filter(name='InstitutionOwner').exists():
-        institution = user.owned_institution
-    else:
-        # If the user is not an InstitutionOwner, you can handle this case accordingly
-        return render(request, 'institution/not_institution_owner.html')
+    template_name = 'institution/institution/institution_detail.html'
 
-    sites = institution.sites.all().order_by('name')
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')(view))
 
-    context = {
-        'institution': institution,
-        'sites': sites,
-    }
+    def get(self, request, *args, **kwargs):
+        user = self.request.user
 
-    return render(request, 'institution/institution_detail.html', context)
+        context = {
+            'institution': None,
+            'sites': None,
+        }
 
-@login_required(login_url='login')
-def create_site(request):
-    if request.method == 'POST':
-        form = SiteForm(request.POST)
+        if user.groups.filter(name='InstitutionOwner').exists():
+            # If the user is an InstitutionOwner, retrieve their institution and all sites
+            context['institution'] = user.owned_institution
+            context['sites'] = user.owned_institution.sites.all().order_by('name')
+        elif user.groups.filter(name='InstitutionStaff').exists():
+            # If the user is an InstitutionStaff, retrieve the sites they are responsible for
+            staff_profile = Staff.objects.get(user=user)
+            context['institution'] = staff_profile.institution
+            context['sites'] = staff_profile.responsible_sites.all().order_by('name')
+
+        return render(request, self.template_name, context)
+
+class CreateSiteView(View):
+    template_name = 'institution/site/create_site.html'
+    form_class = SiteForm
+
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_owner(u), login_url='login')(view))
+
+    def get(self, request, *args, **kwargs):
+        form = self.form_class()
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(request.POST)
         if form.is_valid():
             site = form.save(commit=False)
             site.institution = request.user.owned_institution  # Assuming you have a reference to the owned institution in your User model
             site.save()
             return redirect('institution_detail')  # Redirect to the institution detail page
-    else:
-        form = SiteForm()
 
-    return render(request, 'institution/create_site.html', {'form': form})
+        return render(request, self.template_name, {'form': form})
 
-@login_required(login_url='login')
-def edit_site(request, site_id):
-    site = get_object_or_404(Site, id=site_id)
+class EditSiteView(View):
+    template_name = 'institution/site/edit_site.html'
+    form_class = SiteForm
 
-    if request.method == 'POST':
-        form = SiteForm(request.POST, instance=site)
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')(view))
+
+    def get(self, request, site_id, *args, **kwargs):
+        site = get_object_or_404(Site, id=site_id)
+
+        # Check if the user is the owner or a staff member responsible for the site
+        if not (is_owner_of_site(request.user, site) or is_staff_responsible_for_site(request.user, site)):
+            return render(request, 'permission_denied.html')
+
+        form = self.form_class(instance=site)
+        return render(request, self.template_name, {'form': form, 'site': site})
+
+    def post(self, request, site_id, *args, **kwargs):
+        site = get_object_or_404(Site, id=site_id)
+
+        # Check if the user is the owner or a staff member responsible for the site
+        if not (is_owner_of_site(request.user, site) or is_staff_responsible_for_site(request.user, site)):
+            return render(request, 'permission_denied.html')
+
+        form = self.form_class(request.POST, instance=site)
         if form.is_valid():
             form.save()
             return redirect('institution_detail')
-    else:
-        form = SiteForm(instance=site)
 
-    return render(request, 'institution/edit_site.html', {'form': form, 'site': site})
+        return render(request, self.template_name, {'form': form, 'site': site})
+
+
+
 
 @login_required(login_url='login')
+@user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')
 def create_space(request, site_id):
     site = get_object_or_404(Site, id=site_id)
 
@@ -76,21 +115,73 @@ def create_space(request, site_id):
     else:
         form = SpaceForm()
 
-    return render(request, 'institution/create_space.html', {'form': form, 'site': site})
+    return render(request, 'institution/space/create_space.html', {'form': form, 'site': site})
 
-@login_required(login_url='login')
-def edit_space(request, space_id):
-    space = get_object_or_404(Space, id=space_id)
+class CreateSpaceView(View):
+    template_name = 'institution/space/create_space.html'
+    form_class = SpaceForm
 
-    if request.method == 'POST':
-        form = SpaceForm(request.POST, instance=space)
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')(view))
+
+    def get(self, request, site_id, *args, **kwargs):
+        site = get_object_or_404(Site, id=site_id)
+        # Check if the user is the owner or a staff member responsible for the site
+        if not (is_owner_of_site(request.user, site) or is_staff_responsible_for_site(request.user, site)):
+            return render(request, 'permission_denied.html')
+
+        form = self.form_class()
+        return render(request, self.template_name, {'form': form, 'site': site})
+
+    def post(self, request, site_id, *args, **kwargs):
+        site = get_object_or_404(Site, id=site_id)
+        # Check if the user is the owner or a staff member responsible for the site
+        if not (is_owner_of_site(request.user, site) or is_staff_responsible_for_site(request.user, site)):
+            return render(request, 'permission_denied.html')
+
+        form = self.form_class(request.POST)
+        if form.is_valid():
+            space = form.save(commit=False)
+            space.site = site
+            space.save()
+            return redirect('institution_detail')  # Redirect to the institution detail page or wherever appropriate
+
+        return render(request, self.template_name, {'form': form, 'site': site})
+
+class EditSpaceView(View):
+    template_name = 'institution/space/edit_space.html'
+    form_class = SpaceForm
+
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')(view))
+
+    def get(self, request, space_id, *args, **kwargs):
+        space = get_object_or_404(Space, id=space_id)
+        
+        # Check if the user is the owner or a staff member responsible for the space
+        if not (is_owner_of_space(request.user, space) or is_staff_responsible_for_space(request.user, space)):
+            return render(request, 'permission_denied.html')
+
+        form = self.form_class(instance=space)
+        return render(request, self.template_name, {'form': form, 'space': space})
+
+    def post(self, request, space_id, *args, **kwargs):
+        space = get_object_or_404(Space, id=space_id)
+        
+        # Check if the user is the owner or a staff member responsible for the space
+        if not (is_owner_of_space(request.user, space) or is_staff_responsible_for_space(request.user, space)):
+            return render(request, 'permission_denied.html')
+
+        form = self.form_class(request.POST, instance=space)
         if form.is_valid():
             form.save()
             return redirect('institution_detail')  # Redirect to the institution detail page or wherever appropriate
-    else:
-        form = SpaceForm(instance=space)
 
-    return render(request, 'institution/edit_space.html', {'form': form, 'space': space})
+        return render(request, self.template_name, {'form': form, 'space': space})
 
 
 # @login_required(login_url='login')
@@ -163,6 +254,7 @@ def edit_space(request, space_id):
 #     return render(request, 'institution/delete_staff.html', {'staff': staff})
 
 @login_required(login_url='login')
+@user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')
 def instructor_list(request):
     user = request.user
 
@@ -184,6 +276,7 @@ def instructor_list(request):
     return render(request, 'institution/instructor_list.html', context)
 
 @login_required(login_url='login')
+@user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')
 def create_instructor(request):
     owner = request.user
 
@@ -209,6 +302,7 @@ def create_instructor(request):
     return render(request, 'institution/create_instructor.html', {'form': form})
 
 @login_required(login_url='login')
+@user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')
 def delete_instructor(request, instructor_id):
     instructor = get_object_or_404(Instructor, id=instructor_id)
 

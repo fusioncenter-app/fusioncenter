@@ -2,8 +2,8 @@
 
 from django import forms
 from .models import Site, Space, Staff, Instructor
+from custom_user.models import User
 from django.core.exceptions import ValidationError
-from django.contrib.auth import get_user_model
 
 
 class SiteForm(forms.ModelForm):
@@ -17,7 +17,6 @@ class SpaceForm(forms.ModelForm):
         model = Space
         fields = ['name', 'max_capacity']
 
-User = get_user_model()
 
 class StaffForm(forms.ModelForm):
     email = forms.EmailField(label='User Email', max_length=254)

@@ -1,6 +1,6 @@
 # activity/utils.py
 
-from .models import Session, Participants
+from ..models import Session, Participants
 from plans.models import UserPlan
 from datetime import timedelta
 

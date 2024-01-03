@@ -1,68 +1,73 @@
-from django.shortcuts import render, redirect, get_object_or_404, reverse
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.http import HttpResponseForbidden
-from .models import Activity,Session, Participants
-from institution.models import Site, Space, Instructor
-from plans.models import UserPlan
-from urllib.parse import urlparse
 import re
+from urllib.parse import urlparse
+from datetime import datetime, timedelta, date
 
+from django.contrib import messages
+from django.http import HttpResponseForbidden, HttpResponse
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.template.loader import render_to_string
+from django.utils import timezone
+from django.utils.timezone import make_aware
+from django.http import HttpResponse
+
+from institution.models import Site, Space, Instructor, Staff
+from plans.models import UserPlan
+from .models import Activity, Session, Participants
+from .forms import (
+    ActivityCreateForm,
+    ActivityEditForm,
+    IndividualSessionForm,
+    IndividualSessionEditForm,
+    MultipleSessionCreationForm,
+    CalendarCreateSessionForm,
+    ParticipantRegistrationForm,
+)
 from .views_explore import *
 from .views_my_sessions import *
 
+from .utils.permissions_utils import is_institution_owner, is_institution_instructor, is_institution_staff
 
-from .forms import ActivityCreateForm,ActivityEditForm, IndividualSessionForm, IndividualSessionEditForm, MultipleSessionCreationForm, CalendarCreateSessionForm, ParticipantRegistrationForm
-from datetime import datetime, timedelta,date
-
-
-from django.contrib import messages
-
-from django.template.loader import render_to_string
-from django.http import HttpResponse
-from django.utils import timezone
-
-from django.utils.timezone import make_aware
-
-
-###
-
-### Institution Owner Views
-
-###
-
-def is_institution_owner(user):
-    return user.groups.filter(name='InstitutionOwner').exists()
-
-def is_institution_instructor(user):
-    return user.groups.filter(name='InstitutionInstructor').exists()
-
+#Activity List
 @login_required(login_url='login')
-@user_passes_test(is_institution_owner, login_url='login')
+@user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')
 def activity_list(request):
     user = request.user
 
-    if hasattr(user, 'owned_institution') and user.groups.filter(name='InstitutionOwner').exists():
+    # Check if the user is an institution owner or staff
+    if is_institution_owner(user):
         owned_institution = user.owned_institution
         owned_sites = owned_institution.sites.all().order_by('name')  # Order owned sites by name
 
-        # Retrieve the activities associated with those sites and order them by site
-        activities_by_site = {}
-        for site in owned_sites:
-            activities_by_site[site] = Activity.objects.filter(site=site).order_by('type')
-
-        context = {
-            'activities_by_site': activities_by_site,
-        }
-
-        return render(request, 'activity/activity_list.html', context)
+    elif is_institution_staff(user):
+        # For staff, retrieve the sites they are responsible for
+        staff_profile = Staff.objects.get(user=user)
+        owned_sites = staff_profile.responsible_sites.all().order_by('name')
 
     else:
-        return render(request, 'home.html')
+        # Handle other cases or redirect to an appropriate page
+        return render(request, 'permission_denied.html')
+
+    # Retrieve the activities associated with those sites and order them by site
+    activities_by_site = {}
+    for site in owned_sites:
+        activities_by_site[site] = Activity.objects.filter(site=site).order_by('type')
+
+    context = {
+        'activities_by_site': activities_by_site,
+    }
+
+    return render(request, 'activity/activity_list.html', context)
 
 @login_required(login_url='login')
 @user_passes_test(is_institution_owner, login_url='login')
 def create_activity(request, site_id):
-    site = Site.objects.get(id=site_id)
+    site = get_object_or_404(Site, id=site_id)
+
+    # Check if the current user owns the institution associated with the site
+    if not request.user.owned_institution == site.institution:
+        # Redirect to a permission denied or other appropriate page
+        return render(request, 'permission_denied.html')
 
     if request.method == 'POST':
         form = ActivityCreateForm(site_id, request.POST)
