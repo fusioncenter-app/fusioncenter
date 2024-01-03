@@ -83,7 +83,6 @@ class InstructorForm(forms.ModelForm):
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
-        User = get_user_model()
 
         # Check if the user with the provided email exists
         user_exists = User.objects.filter(email=email).exists()

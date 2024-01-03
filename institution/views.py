@@ -9,8 +9,9 @@ from .models import Institution, Site, Space, Staff, Instructor
 from .forms import SiteForm, SpaceForm, StaffForm, InstructorForm
 from custom_user.models import User
 from .utils.permissions_utils import is_institution_owner, is_institution_instructor, is_institution_staff, is_owner_of_site, is_staff_responsible_for_site, is_owner_of_space, is_staff_responsible_for_space
+from django.contrib import messages
 
-
+### INSTITUTION
 
 class InstitutionDetailView(View):
 
@@ -41,6 +42,8 @@ class InstitutionDetailView(View):
 
         return render(request, self.template_name, context)
 
+### SITE
+
 class CreateSiteView(View):
     template_name = 'institution/site/create_site.html'
     form_class = SiteForm
@@ -60,8 +63,10 @@ class CreateSiteView(View):
             site = form.save(commit=False)
             site.institution = request.user.owned_institution  # Assuming you have a reference to the owned institution in your User model
             site.save()
+            messages.success(request, 'Site created successfully.')
             return redirect('institution_detail')  # Redirect to the institution detail page
 
+        messages.error(request, 'Error creating the site. Please check the form.')
         return render(request, self.template_name, {'form': form})
 
 class EditSiteView(View):
@@ -78,6 +83,7 @@ class EditSiteView(View):
 
         # Check if the user is the owner or a staff member responsible for the site
         if not (is_owner_of_site(request.user, site) or is_staff_responsible_for_site(request.user, site)):
+            messages.error(request, 'You do not have permission to edit this site.')
             return render(request, 'permission_denied.html')
 
         form = self.form_class(instance=site)
@@ -88,34 +94,19 @@ class EditSiteView(View):
 
         # Check if the user is the owner or a staff member responsible for the site
         if not (is_owner_of_site(request.user, site) or is_staff_responsible_for_site(request.user, site)):
+            messages.error(request, 'You do not have permission to edit this site.')
             return render(request, 'permission_denied.html')
 
         form = self.form_class(request.POST, instance=site)
         if form.is_valid():
             form.save()
+            messages.success(request, 'Site updated successfully.')
             return redirect('institution_detail')
 
+        messages.error(request, 'Error updating the site. Please check the form.')
         return render(request, self.template_name, {'form': form, 'site': site})
 
-
-
-
-@login_required(login_url='login')
-@user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')
-def create_space(request, site_id):
-    site = get_object_or_404(Site, id=site_id)
-
-    if request.method == 'POST':
-        form = SpaceForm(request.POST)
-        if form.is_valid():
-            space = form.save(commit=False)
-            space.site = site
-            space.save()
-            return redirect('institution_detail')  # Redirect to the institution detail page or wherever appropriate
-    else:
-        form = SpaceForm()
-
-    return render(request, 'institution/space/create_space.html', {'form': form, 'site': site})
+### SPACE
 
 class CreateSpaceView(View):
     template_name = 'institution/space/create_space.html'
@@ -130,6 +121,7 @@ class CreateSpaceView(View):
         site = get_object_or_404(Site, id=site_id)
         # Check if the user is the owner or a staff member responsible for the site
         if not (is_owner_of_site(request.user, site) or is_staff_responsible_for_site(request.user, site)):
+            messages.error(request, 'You do not have permission to create a space for this site.')
             return render(request, 'permission_denied.html')
 
         form = self.form_class()
@@ -139,6 +131,7 @@ class CreateSpaceView(View):
         site = get_object_or_404(Site, id=site_id)
         # Check if the user is the owner or a staff member responsible for the site
         if not (is_owner_of_site(request.user, site) or is_staff_responsible_for_site(request.user, site)):
+            messages.error(request, 'You do not have permission to create a space for this site.')
             return render(request, 'permission_denied.html')
 
         form = self.form_class(request.POST)
@@ -146,8 +139,10 @@ class CreateSpaceView(View):
             space = form.save(commit=False)
             space.site = site
             space.save()
+            messages.success(request, 'Space created successfully.')
             return redirect('institution_detail')  # Redirect to the institution detail page or wherever appropriate
 
+        messages.error(request, 'Error creating the space. Please check the form.')
         return render(request, self.template_name, {'form': form, 'site': site})
 
 class EditSpaceView(View):
@@ -164,6 +159,7 @@ class EditSpaceView(View):
         
         # Check if the user is the owner or a staff member responsible for the space
         if not (is_owner_of_space(request.user, space) or is_staff_responsible_for_space(request.user, space)):
+            messages.error(request, 'You do not have permission to edit this space.')
             return render(request, 'permission_denied.html')
 
         form = self.form_class(instance=space)
@@ -174,15 +170,20 @@ class EditSpaceView(View):
         
         # Check if the user is the owner or a staff member responsible for the space
         if not (is_owner_of_space(request.user, space) or is_staff_responsible_for_space(request.user, space)):
+            messages.error(request, 'You do not have permission to edit this space.')
             return render(request, 'permission_denied.html')
 
         form = self.form_class(request.POST, instance=space)
         if form.is_valid():
             form.save()
+            messages.success(request, 'Space updated successfully.')
             return redirect('institution_detail')  # Redirect to the institution detail page or wherever appropriate
 
+        messages.error(request, 'There was an error updating the space.')
         return render(request, self.template_name, {'form': form, 'space': space})
 
+
+### STAFF
 
 # @login_required(login_url='login')
 # def staff_list(request):
@@ -253,35 +254,55 @@ class EditSpaceView(View):
 
 #     return render(request, 'institution/delete_staff.html', {'staff': staff})
 
-@login_required(login_url='login')
-@user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')
-def instructor_list(request):
-    user = request.user
 
-    if not user.is_authenticated:
-        return redirect('login')
+### INSTRUCTOR
 
-    if user.groups.filter(name='InstitutionOwner').exists():
-        institution = user.owned_institution
-    else:
-        return render(request, 'institution/not_institution_owner.html')
+class InstructorListView(View):
+    template_name = 'institution/instructor/instructor_list.html'
 
-    instructors = institution.instructors.all()
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')(view))
 
-    context = {
-        'institution': institution,
-        'instructors': instructors,
-    }
+    def get(self, request, *args, **kwargs):
+        user = request.user
 
-    return render(request, 'institution/instructor_list.html', context)
+        if user.groups.filter(name='InstitutionOwner').exists():
+            institution = user.owned_institution
+            instructors = institution.instructors.all()
+        elif user.groups.filter(name='InstitutionStaff').exists():
+            staff_profile = Staff.objects.get(user=user)
+            institution = staff_profile.institution
+            instructors = institution.instructors.all()
+        else:
+            return render(request, 'permission_denied.html')
 
-@login_required(login_url='login')
-@user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')
-def create_instructor(request):
-    owner = request.user
+        context = {
+            'institution': institution,
+            'instructors': instructors,
+        }
 
-    if request.method == 'POST':
-        form = InstructorForm(request.POST, owner=owner)
+        return render(request, self.template_name, context)
+    
+class CreateInstructorView(View):
+
+    template_name = 'institution/instructor/create_instructor.html'
+    form_class = InstructorForm
+
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')(view))
+
+    def get(self, request, *args, **kwargs):
+        owner = request.user
+        form = self.form_class(owner=owner)
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request, *args, **kwargs):
+        owner = request.user
+        form = self.form_class(request.POST, owner=owner)
 
         if form.is_valid():
             email = form.cleaned_data['email']
@@ -289,29 +310,47 @@ def create_instructor(request):
             # Check if an Instructor instance already exists for the user
             instructor_instance, created = Instructor.objects.get_or_create(user=email)
 
-            # Assign the institution to the instructor based on the owner's institution
-            instructor_instance.institutions.add(owner.owned_institution)
+            # Assign the institution to the instructor based on the user's institution
+            if is_institution_owner(owner) and hasattr(owner, 'owned_institution'):
+                instructor_instance.institutions.add(owner.owned_institution)
+            elif is_institution_staff(owner) and hasattr(owner, 'staff_profile'):
+                instructor_instance.institutions.add(owner.staff_profile.institution)
 
             # You can perform additional operations if needed before saving
             instructor_instance.save()
             
+            messages.success(request, 'Instructor added successfully.')
             return redirect('instructor_list')  # Redirect to the instructor list or wherever appropriate
-    else:
-        form = InstructorForm(owner=owner)
 
-    return render(request, 'institution/create_instructor.html', {'form': form})
+        return render(request, self.template_name, {'form': form})
 
-@login_required(login_url='login')
-@user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')
-def delete_instructor(request, instructor_id):
-    instructor = get_object_or_404(Instructor, id=instructor_id)
+class DeleteInstructorView(View):
+    template_name = 'institution/instructor/delete_instructor.html'
 
-    if request.method == 'POST':
-        # Remove the owner's institution from the instructor's institutions
-        owner_institution = request.user.owned_institution
-        instructor.institutions.remove(owner_institution)
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')(view))
+
+    def get(self, request, instructor_id, *args, **kwargs):
+        instructor = get_object_or_404(Instructor, id=instructor_id)
+        return render(request, self.template_name, {'instructor': instructor})
+
+    def post(self, request, instructor_id, *args, **kwargs):
+        instructor = get_object_or_404(Instructor, id=instructor_id)
+
+        # Check if the user is an owner or staff and has an owned_institution attribute
+        if is_institution_owner(request.user) and hasattr(request.user, 'owned_institution'):
+            owner_institution = request.user.owned_institution
+            instructor.institutions.remove(owner_institution)
+            messages.success(request, 'Instructor removed successfully.')
+        elif is_institution_staff(request.user) and hasattr(request.user, 'staff_profile'):
+            staff_institution = request.user.staff_profile.institution
+            instructor.institutions.remove(staff_institution)
+            messages.success(request, 'Instructor removed successfully.')
+        else:
+            messages.error(request, 'You do not have permission to delete this instructor.')
 
         return redirect('instructor_list')
 
-    return render(request, 'institution/delete_instructor.html', {'instructor': instructor})
 
