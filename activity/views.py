@@ -36,6 +36,8 @@ from .utils.permissions_utils import (
     is_activity_of_staff_sites,
     is_session_of_owner_sites,
     is_session_of_staff_sites,
+    is_owner_of_space,
+    is_staff_responsible_for_space
 )
 
 #Activity List
@@ -321,7 +323,7 @@ def get_sessions_for_week(space, year, week):
     end_date = start_date + timedelta(days=6)
 
     # Query sessions for the specified space and date range
-    sessions = space.sessions.filter(date__range=[start_date, end_date])
+    sessions = space.sessions.filter(date__range=[start_date, end_date]).order_by('from_time')
 
     for session in sessions:
         # Calculate counts for different assistance_status
@@ -405,7 +407,7 @@ class DeleteSessionView(View):
     def get(self, request, session_id, *args, **kwargs):
         session = self.get_object(session_id)
 
-        # Check if the user is the owner or a staff member responsible for the site
+        # Check if the user is the owner or a staff member responsible for the session
         if not (is_session_of_owner_sites(request.user, session) or is_session_of_staff_sites(request.user, session)):
             return render(request, 'permission_denied.html')
 
@@ -419,7 +421,7 @@ class DeleteSessionView(View):
     def post(self, request, session_id, *args, **kwargs):
         session = self.get_object(session_id)
 
-        # Check if the user is the owner or a staff member responsible for the site
+        # Check if the user is the owner or a staff member responsible for the session
         if not (is_session_of_owner_sites(request.user, session) or is_session_of_staff_sites(request.user, session)):
             return render(request, 'permission_denied.html')
 
@@ -433,22 +435,44 @@ class DeleteSessionView(View):
         redirect_url = 'activity_list'  # Replace with the name of your activity list URL
         return redirect('activity_detail', activity_id=session.activity.id)
 
-@login_required(login_url='login')
-@user_passes_test(is_institution_owner, login_url='login')
-def calendar_create_session(request, space_id, date):
-    
-    space = Space.objects.get(pk=space_id)
 
-    form = CalendarCreateSessionForm(space,request.POST or None)
+class CalendarCreateSessionView(View):
+    template_name = 'activity/calendar/calendar_create_session.html' 
 
-    # Determine the week and year for the newly created session date
-    session_date = datetime.strptime(date, '%Y-%m-%d').date()
-    week_number = session_date.isocalendar()[1]
-    year_number = session_date.year
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')(view))
 
-    
+    def get(self, request, space_id, date, *args, **kwargs):
+        space = Space.objects.get(pk=space_id)
 
-    if request.method == 'POST':
+        # Check if the user is the owner or a staff member responsible for the space
+        if not (is_owner_of_space(request.user, space) or is_staff_responsible_for_space(request.user, space)):
+            return render(request, 'permission_denied.html')
+        
+        week_number, year_number = self.calculate_week_and_year(date)
+        form = CalendarCreateSessionForm(space,request.POST or None)
+        context = {
+            'space': space,
+            'date': date,
+            'form': form,
+            'week_number': week_number,
+            'year_number': year_number,
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request, space_id, date, *args, **kwargs):
+        
+        space = Space.objects.get(pk=space_id)
+
+        # Check if the user is the owner or a staff member responsible for the space
+        if not (is_owner_of_space(request.user, space) or is_staff_responsible_for_space(request.user, space)):
+            return render(request, 'permission_denied.html')
+        
+        week_number, year_number = self.calculate_week_and_year(date)
+        form = CalendarCreateSessionForm(space,request.POST or None)
+
         if form.is_valid():
             session = form.save(commit=False)
             session.space = space
@@ -457,19 +481,63 @@ def calendar_create_session(request, space_id, date):
 
             # Build the redirect URL with query parameters
             redirect_url = f'/space_calendar/{space_id}/?week={week_number}&year={year_number}'
-
             # Redirect to the manually built URL
             return redirect(redirect_url)
 
-    context = {
-        'space': space,
-        'date': date,
-        'form': form,
-        'week_number':week_number,
-        'year_number':year_number,
-    }
+        else:
+            context = {
+                'space': space,
+                'date': date,
+                'form': form,
+                'week_number': week_number,
+                'year_number': year_number,
+            }
+            return render(request, self.template_name, context)
 
-    return render(request, 'activity/calendar_create_session.html', context)
+    def calculate_week_and_year(self, date):
+        session_date = datetime.strptime(date, '%Y-%m-%d').date()
+        week_number = session_date.isocalendar()[1]
+        year_number = session_date.year
+        return week_number, year_number
+    
+class SessionParticipantsView(View):
+
+    template_name = 'activity/session/session_participants.html'
+
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')(view))
+
+    def get(self, request, *args, **kwargs):
+        # Get the session or return a 404 response if not found
+        session = get_object_or_404(Session, id=self.kwargs['session_id'])
+
+        # Check if the user is the owner or a staff member responsible for the session
+        if not (is_session_of_owner_sites(request.user, session) or is_session_of_staff_sites(request.user, session)):
+            return render(request, 'permission_denied.html')
+
+        today = date.today()
+
+        # Get the participants for the specified session
+        participants = Participants.objects.filter(session=session).order_by('user__last_name')
+
+        # Calculate the availability for the session
+        registered_count = participants.filter(assistance_status='registered').count()
+        present_count = participants.filter(assistance_status='present').count()
+        absent_count = participants.filter(assistance_status='absent').count()
+        total_participants = registered_count + present_count + absent_count
+        availability = session.session_capacity - total_participants
+
+        context = {
+            'session': session,
+            'participants': participants,
+            'today': today,
+            'availability': availability,
+        }
+
+        # Render the template with the participants and availability for the session
+        return render(request, self.template_name, context)
 
 @login_required(login_url='login')
 @user_passes_test(lambda u: is_institution_owner(u) or is_institution_instructor(u), login_url='login')

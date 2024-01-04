@@ -54,4 +54,15 @@ def is_session_of_staff_sites(user, session):
         except Staff.DoesNotExist:
             pass
     return False
-    
+
+def is_owner_of_space(user, space):
+    # Check if the user is an institution owner and is the owner of the given space
+    return hasattr(user, 'owned_institution') and space.site.institution == user.owned_institution
+
+def is_staff_responsible_for_space(user, space):
+    # Check if the user is a staff member responsible for the given space
+    try:
+        staff_profile = Staff.objects.get(user=user)
+        return staff_profile and space.site in staff_profile.responsible_sites.all()
+    except Staff.DoesNotExist:
+        return False

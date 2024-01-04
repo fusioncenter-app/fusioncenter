@@ -7,7 +7,7 @@ from .views import (
     ActivityListView, CreateActivityView, EditActivityView,
     ActivityDetailView, IndividualSessionCreateView,
     IndividualSessionEditView,MultipleSessionCreateView, 
-    space_calendar,DeleteSessionView,calendar_create_session,
+    space_calendar,DeleteSessionView,CalendarCreateSessionView,
     instructor_activity_list, instructor_activity_detail, 
     session_participants, update_attendance,
     user_session_registration, user_session_cancellation,
@@ -27,7 +27,7 @@ urlpatterns = [
     path('space_calendar/<int:space_id>/',space_calendar, name='space_calendar'),
     path('session_delete/<int:session_id>/', DeleteSessionView.as_view(), name='delete_session'),
 
-    path('calendar_create_session/<int:space_id>/<str:date>/', calendar_create_session, name='calendar_create_session'),
+    path('calendar_create_session/<int:space_id>/<str:date>/', CalendarCreateSessionView.as_view(), name='calendar_create_session'),
 
     path('instructor_activity_list/<int:user_id>/', instructor_activity_list, name='instructor_activity_list'),
     path('instructor_activity_detail/<int:activity_id>/', instructor_activity_detail, name='instructor_activity_detail'),
