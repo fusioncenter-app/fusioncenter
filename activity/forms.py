@@ -1,6 +1,6 @@
 from django import forms
 from .models import Activity, Session, Participants
-from institution.models import Instructor, Space
+from institution.models import Instructor, Space, Staff
 from plans.models import UserPlan, PlanPricing, Plan
 from custom_user.models import User
 from django.shortcuts import get_object_or_404
@@ -8,6 +8,7 @@ from django.utils import timezone
 from datetime import timedelta
 
 from datetime import datetime, timedelta
+from .utils.permissions_utils import is_institution_owner, is_institution_staff
 
 class ActivityCreateForm(forms.ModelForm):
     class Meta:
@@ -21,20 +22,26 @@ class ActivityCreateForm(forms.ModelForm):
 class ActivityEditForm(forms.ModelForm):
     class Meta:
         model = Activity
-        fields = ['name', 'description', 'type', 'custom_capacity', 'instructor', 'site', 'status'] 
+        fields = ['name', 'description', 'type', 'custom_capacity', 'instructor', 'site', 'status']
 
     def __init__(self, user, *args, **kwargs):
         super(ActivityEditForm, self).__init__(*args, **kwargs)
-        
-        # Assuming that the user has an 'owned_institution' attribute
-        owned_institution = user.owned_institution
-        
-        # Filter the sites related to the owner institution
-        self.fields['site'].queryset = owned_institution.sites.all()
+
+        # Check if the user is an owner or staff
+        if is_institution_owner(user):
+            # Assuming that the user has an 'owned_institution' attribute
+            owned_institution = user.owned_institution
+            # Filter the sites related to the owner institution
+            self.fields['site'].queryset = owned_institution.sites.all()
+        elif is_institution_staff(user):
+            # For staff, filter the sites they are responsible for
+            staff_profile = Staff.objects.get(user=user)
+            self.fields['site'].queryset = staff_profile.responsible_sites.all()
 
         # Filter instructors based on the institutions related to the site
         site_id = self.initial.get('site', None)  # Get the initial site value if available
         self.fields['instructor'].queryset = Instructor.objects.filter(institutions__sites__id=site_id)
+
 
 class IndividualSessionForm(forms.ModelForm):
     class Meta:

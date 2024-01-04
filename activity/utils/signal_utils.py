@@ -1,4 +1,4 @@
-# activity/utils.py
+# activity/utils/signal_utils.py
 
 from ..models import Session, Participants
 from plans.models import UserPlan
@@ -29,7 +29,9 @@ def user_has_unlimited_plan(user, session):
         plan_pricing__plan__plan_type='unlimited'
     )
     
-    return unlimited_plans.exists()
+    result = unlimited_plans.exists()
+    # print(f"user_has_unlimited_plan: {result}")
+    return result
 
 def user_has_limited_plan(user, session):
     """
@@ -51,7 +53,9 @@ def user_has_limited_plan(user, session):
         assistance_status='registered'
     ).exists()
 
-    return limited_plans.exists() and is_registered
+    result = limited_plans.exists() and is_registered
+    # print(f"user_has_limited_plan: {result}")
+    return result
 
 def add_participant(user, session, user_plan=None):
     """
@@ -61,6 +65,7 @@ def add_participant(user, session, user_plan=None):
     existing_participant = Participants.objects.filter(session=session, user=user)
     
     if existing_participant.exists():
+        # print("Participant already exists.")
         pass
     else:
         # Replace this with your logic
@@ -69,6 +74,7 @@ def add_participant(user, session, user_plan=None):
             user_plan = UserPlan.objects.get(user=user, plan_pricing__plan__activities=session.activity)
         
         Participants.objects.create(session=session, user=user, assistance_status='registered', user_plan=user_plan)
+        # print("Participant added.")
 
 def remove_participant(participant):
     """
@@ -87,7 +93,27 @@ def remove_participant(participant):
     ).exclude(pk=participant.pk)
 
     if other_participants_with_limited_plans.exists():
+        # print("Other participants with limited plans exist.")
         pass
     else:
         # Replace this with your logic to remove the participant
         participant.delete()
+        # print("Participant removed.")
+
+
+def create_participants_with_unlimited_plans(session):
+    """
+    Create participants for users with unlimited plans when a new session is created.
+    """
+    unlimited_user_plans = UserPlan.objects.filter(
+        plan_pricing__plan__activities=session.activity,
+        plan_pricing__status='active',
+        plan_pricing__from_date__lte=session.date,
+        plan_pricing__to_date__gte=session.date,
+        plan_pricing__plan__plan_type='unlimited'
+    )
+
+    for user_plan in unlimited_user_plans:
+        user = user_plan.user
+        if should_participate(user, session):
+            add_participant(user, session, user_plan)

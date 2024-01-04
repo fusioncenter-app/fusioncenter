@@ -55,7 +55,7 @@ def create_plan(request, site_id):
 
             selected_activity_ids = request.POST.getlist('activities')
             form.set_activities(selected_activity_ids)
-            print("Selected Activities:", selected_activity_ids)
+            # print("Selected Activities:", selected_activity_ids)
             
             plan.site = site
             form.save()  # Save the plan along with associated activities

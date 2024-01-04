@@ -26,144 +26,227 @@ from .forms import (
 from .views_explore import *
 from .views_my_sessions import *
 
-from .utils.permissions_utils import is_institution_owner, is_institution_instructor, is_institution_staff
+from .utils.permissions_utils import (
+    is_institution_owner, 
+    is_institution_instructor, 
+    is_institution_staff, 
+    is_owner_of_site, 
+    is_staff_responsible_for_site, 
+    is_activity_of_owner_sites, 
+    is_activity_of_staff_sites,
+    is_session_of_owner_sites,
+    is_session_of_staff_sites,
+)
 
 #Activity List
-@login_required(login_url='login')
-@user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')
-def activity_list(request):
-    user = request.user
+class ActivityListView(View):
 
-    # Check if the user is an institution owner or staff
-    if is_institution_owner(user):
-        owned_institution = user.owned_institution
-        owned_sites = owned_institution.sites.all().order_by('name')  # Order owned sites by name
+    template_name = 'activity/activity/activity_list.html'
 
-    elif is_institution_staff(user):
-        # For staff, retrieve the sites they are responsible for
-        staff_profile = Staff.objects.get(user=user)
-        owned_sites = staff_profile.responsible_sites.all().order_by('name')
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')(view))
 
-    else:
-        # Handle other cases or redirect to an appropriate page
-        return render(request, 'permission_denied.html')
+    def get(self, request, *args, **kwargs):
+        user = request.user
 
-    # Retrieve the activities associated with those sites and order them by site
-    activities_by_site = {}
-    for site in owned_sites:
-        activities_by_site[site] = Activity.objects.filter(site=site).order_by('type')
+        # Check if the user is an institution owner or staff
+        if is_institution_owner(user):
+            owned_institution = user.owned_institution
+            owned_sites = owned_institution.sites.all().order_by('name')  # Order owned sites by name
 
-    context = {
-        'activities_by_site': activities_by_site,
-    }
+        elif is_institution_staff(user):
+            # For staff, retrieve the sites they are responsible for
+            staff_profile = Staff.objects.get(user=user)
+            owned_sites = staff_profile.responsible_sites.all().order_by('name')
 
-    return render(request, 'activity/activity_list.html', context)
+        else:
+            # Handle other cases or redirect to an appropriate page
+            return render(request, 'permission_denied.html')
 
-@login_required(login_url='login')
-@user_passes_test(is_institution_owner, login_url='login')
-def create_activity(request, site_id):
-    site = get_object_or_404(Site, id=site_id)
+        # Retrieve the activities associated with those sites and order them by site
+        activities_by_site = {}
+        for site in owned_sites:
+            activities_by_site[site] = Activity.objects.filter(site=site).order_by('type')
 
-    # Check if the current user owns the institution associated with the site
-    if not request.user.owned_institution == site.institution:
-        # Redirect to a permission denied or other appropriate page
-        return render(request, 'permission_denied.html')
+        context = {
+            'activities_by_site': activities_by_site,
+        }
 
-    if request.method == 'POST':
+        return render(request, self.template_name, context)
+    
+class CreateActivityView(View):
+    template_name = 'activity/activity/create_activity.html'
+
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')(view))
+
+    def get(self, request, site_id, *args, **kwargs):
+        site = get_object_or_404(Site, id=site_id)
+
+        # Check if the user is the owner or a staff member responsible for the site
+        if not (is_owner_of_site(request.user, site) or is_staff_responsible_for_site(request.user, site)):
+            return render(request, 'permission_denied.html')
+
+        form = ActivityCreateForm(site_id)
+        return render(request, self.template_name, {'form': form, 'site': site})
+
+    def post(self, request, site_id, *args, **kwargs):
+        site = get_object_or_404(Site, id=site_id)
+
+        # Check if the user is the owner or a staff member responsible for the site
+        if not (is_owner_of_site(request.user, site) or is_staff_responsible_for_site(request.user, site)):
+            return render(request, 'permission_denied.html')
+
         form = ActivityCreateForm(site_id, request.POST)
         if form.is_valid():
             activity = form.save(commit=False)
             activity.site = site
             activity.save()
             return redirect('activity_list')  # Replace with your actual URL
-    else:
-        form = ActivityCreateForm(site_id)
 
-    return render(request, 'activity/create_activity.html', {'form': form, 'site': site})
+        return render(request, self.template_name, {'form': form, 'site': site})
 
-@login_required(login_url='login')
-@user_passes_test(is_institution_owner, login_url='login')
-def edit_activity(request, activity_id):
-    activity = get_object_or_404(Activity, id=activity_id)
-    site = activity.site
 
-    if request.method == 'POST':
+class EditActivityView(View):
+    template_name = 'activity/activity/edit_activity.html'
+
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')(view))
+
+    def get(self, request, *args, **kwargs):
+        activity_id = kwargs['activity_id']
+        activity = get_object_or_404(Activity, id=activity_id)
+        site = activity.site
+
+        # Check if the user is the owner or a staff member responsible for the site
+        if not (is_owner_of_site(request.user, site) or is_staff_responsible_for_site(request.user, site)):
+            return render(request, 'permission_denied.html')
+
+        form = ActivityEditForm(request.user, instance=activity)
+        return render(request, self.template_name, {'form': form, 'activity': activity})
+
+    def post(self, request, *args, **kwargs):
+        activity_id = kwargs['activity_id']
+        activity = get_object_or_404(Activity, id=activity_id)
+        site = activity.site
+
+        # Check if the user is the owner or a staff member responsible for the site
+        if not (is_owner_of_site(request.user, site) or is_staff_responsible_for_site(request.user, site)):
+            return render(request, 'permission_denied.html')
+
         form = ActivityEditForm(request.user, request.POST, instance=activity)
         if form.is_valid():
             form.save()
             return redirect('activity_list')  # Replace with your actual URL
-    else:
-        form = ActivityEditForm(request.user, instance=activity)
 
-    return render(request, 'activity/edit_activity.html', {'form': form, 'activity': activity})
+        return render(request, self.template_name, {'form': form, 'activity': activity})
 
 
-@login_required(login_url='login')
-@user_passes_test(is_institution_owner, login_url='login')
-def activity_detail(request, activity_id):
-    activity = get_object_or_404(Activity, id=activity_id)
+class ActivityDetailView(View):
+    template_name = 'activity/activity/activity_detail.html'
 
-    sessions = activity.sessions.order_by('date', 'from_time')
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')(view))
 
-    for session in sessions:
-        # Calculate counts for different assistance_status
-        session.registered_count = Participants.objects.filter(session=session, assistance_status='registered').count()
-        session.present_count = Participants.objects.filter(session=session, assistance_status='present').count()
-        session.absent_count = Participants.objects.filter(session=session, assistance_status='absent').count()
+    def get(self, request, activity_id, *args, **kwargs):
+        activity = get_object_or_404(Activity, id=activity_id)
 
-        # Calculate total_participants and availability
-        session.total_participants = session.registered_count + session.present_count + session.absent_count
-        session.availability = session.session_capacity - session.total_participants
+        # Check if the user is the owner or a staff member responsible for the site
+        if not (is_activity_of_owner_sites(request.user, activity) or is_activity_of_staff_sites(request.user, activity)):
+            return render(request, 'permission_denied.html')
 
-        # Calculate all_participants_present using Case expression
-        if session.registered_count > 0:
-            session.all_participants_present = False
-        elif session.total_participants == 0:
-            session.all_participants_present = None
-        else:
-            session.all_participants_present = True
+        sessions = activity.sessions.order_by('date', 'from_time')
+
+        for session in sessions:
+            # Calculate counts for different assistance_status
+            session.registered_count = Participants.objects.filter(session=session, assistance_status='registered').count()
+            session.present_count = Participants.objects.filter(session=session, assistance_status='present').count()
+            session.absent_count = Participants.objects.filter(session=session, assistance_status='absent').count()
+
+            # Calculate total_participants and availability
+            session.total_participants = session.registered_count + session.present_count + session.absent_count
+            session.availability = session.session_capacity - session.total_participants
+
+            # Calculate all_participants_present using Case expression
+            if session.registered_count > 0:
+                session.all_participants_present = False
+            elif session.total_participants == 0:
+                session.all_participants_present = None
+            else:
+                session.all_participants_present = True
+
+        today = date.today()
+
+        context = {
+            'activity': activity,
+            'sessions': sessions,
+            'today': today,
+        }
+
+        return render(request, self.template_name, context)
 
 
-    today = date.today()
 
-    context = {
-        'activity': activity,
-        'sessions': sessions,
-        'today': today,
-    }
+class IndividualSessionCreateView(View):
+    template_name = 'activity/session/individual_session_create.html'
 
-    return render(request, 'activity/activity_detail.html', context)
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')(view))
 
-@login_required(login_url='login')
-@user_passes_test(is_institution_owner, login_url='login')
-def individual_session_create(request, activity_id):
-    activity = get_object_or_404(Activity, id=activity_id)
+    def get(self, request, activity_id, *args, **kwargs):
+        activity = get_object_or_404(Activity, id=activity_id)
 
-    if request.method == 'POST':
+        # Check if the user is the owner or a staff member responsible for the site
+        if not (is_activity_of_owner_sites(request.user, activity) or is_activity_of_staff_sites(request.user, activity)):
+            return render(request, 'permission_denied.html')
+        
+        form = IndividualSessionForm(activity_id=activity_id)
+        return render(request, self.template_name, {'activity': activity, 'form': form})
+
+    def post(self, request, activity_id, *args, **kwargs):
+        activity = get_object_or_404(Activity, id=activity_id)
+
+        # Check if the user is the owner or a staff member responsible for the site
+        if not (is_activity_of_owner_sites(request.user, activity) or is_activity_of_staff_sites(request.user, activity)):
+            return render(request, 'permission_denied.html')
+
         form = IndividualSessionForm(request.POST, activity_id=activity_id)
+        
         if form.is_valid():
             # Save the session
             session = form.save()
             # Redirect to a success page or do something else
             return redirect('activity_detail', activity_id=activity.id)
-    else:
-        form = IndividualSessionForm(activity_id=activity_id)
 
+        return render(request, self.template_name, {'activity': activity, 'form': form})
 
-    return render(request, 'activity/individual_session_create.html', {'activity': activity, 'form': form})
+class IndividualSessionEditView(View):
+    template_name = 'activity/session/individual_session_edit.html'
 
-@login_required(login_url='login')
-@user_passes_test(is_institution_owner, login_url='login')
-def individual_session_edit(request, activity_id, session_id):
-    activity = get_object_or_404(Activity, pk=activity_id)
-    session = get_object_or_404(Session, pk=session_id)
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')(view))
 
-    if request.method == 'POST':
-        form = IndividualSessionEditForm(request.POST, instance=session)
-        if form.is_valid():
-            form.save()
-            return redirect('activity_detail', activity_id=activity_id)
-    else:
+    def get(self, request, activity_id, session_id, *args, **kwargs):
+        activity = get_object_or_404(Activity, pk=activity_id)
+
+        # Check if the user is the owner or a staff member responsible for the site
+        if not (is_activity_of_owner_sites(request.user, activity) or is_activity_of_staff_sites(request.user, activity)):
+            return render(request, 'permission_denied.html')
+
+        session = get_object_or_404(Session, pk=session_id)
+
         # Extract values from the session object in the desired format
         initial_data = {
             'date': session.date.strftime('%Y-%m-%d'),
@@ -173,32 +256,62 @@ def individual_session_edit(request, activity_id, session_id):
             'space': session.space.id,
             'status': session.status,
         }
+
         form = IndividualSessionEditForm(instance=session, initial=initial_data)
+        return render(request, self.template_name, {'form': form, 'activity': activity, 'session': session})
 
-    return render(request, 'activity/individual_session_edit.html', {'form': form, 'activity': activity, 'session': session})
+    def post(self, request, activity_id, session_id, *args, **kwargs):
+        activity = get_object_or_404(Activity, pk=activity_id)
+
+        # Check if the user is the owner or a staff member responsible for the site
+        if not (is_activity_of_owner_sites(request.user, activity) or is_activity_of_staff_sites(request.user, activity)):
+            return render(request, 'permission_denied.html')
+
+        session = get_object_or_404(Session, pk=session_id)
+
+        form = IndividualSessionEditForm(request.POST, instance=session)
+        if form.is_valid():
+            form.save()
+            return redirect('activity_detail', activity_id=activity_id)
+
+        return render(request, self.template_name, {'form': form, 'activity': activity, 'session': session})
 
 
-@login_required(login_url='login')
-@user_passes_test(is_institution_owner, login_url='login')
-def multiple_session_create(request, activity_id):
-    activity = get_object_or_404(Activity, id=activity_id)
+class MultipleSessionCreateView(View):
+    template_name = 'activity/session/multiple_session_create.html'
 
-    if request.method == 'POST':
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')(view))
+
+    def get(self, request, activity_id, *args, **kwargs):
+        activity = get_object_or_404(Activity, id=activity_id)
+
+        # Check if the user is the owner or a staff member responsible for the site
+        if not (is_activity_of_owner_sites(request.user, activity) or is_activity_of_staff_sites(request.user, activity)):
+            return render(request, 'permission_denied.html')
+
+        form = MultipleSessionCreationForm(activity_id)
+        context = {'form': form, 'activity': activity}
+        return render(request, self.template_name, context)
+
+    def post(self, request, activity_id, *args, **kwargs):
+        activity = get_object_or_404(Activity, id=activity_id)
+
+        # Check if the user is the owner or a staff member responsible for the site
+        if not (is_activity_of_owner_sites(request.user, activity) or is_activity_of_staff_sites(request.user, activity)):
+            return render(request, 'permission_denied.html')
+
         form = MultipleSessionCreationForm(activity_id, request.POST)
         if form.is_valid():
             # Set the activity_id before saving
             form.instance.activity_id = activity_id
             form.save()
             return redirect('activity_detail', activity_id=activity_id)
-    else:
-        form = MultipleSessionCreationForm(activity_id)
 
-    context = {
-        'form': form,
-        'activity': activity,
-    }
-
-    return render(request, 'activity/multiple_session_create.html', context)
+        context = {'form': form, 'activity': activity}
+        return render(request, self.template_name, context)
 
 
 
@@ -276,25 +389,49 @@ def space_calendar(request, space_id):
         'today': today,
     }
 
-    return render(request, 'activity/space_calendar.html', context)
+    return render(request, 'activity/calendar/space_calendar.html', context)
 
-@login_required(login_url='login')
-@user_passes_test(is_institution_owner, login_url='login')
-def delete_session(request, session_id):
-    session = get_object_or_404(Session, pk=session_id)
-    
-    # Check if the session date is in the future
-    if session.date < date.today():
-        messages.error(request, "Cannot delete past sessions.")
-        return redirect('activity_detail', activity_id=session.activity.id)
+class DeleteSessionView(View):
+    template_name = 'activity/session/session_delete.html'  # Replace with your actual template name
 
-    if request.method == 'POST':
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')(view))
+
+    def get_object(self, session_id):
+        return get_object_or_404(Session, pk=session_id)
+
+    def get(self, request, session_id, *args, **kwargs):
+        session = self.get_object(session_id)
+
+        # Check if the user is the owner or a staff member responsible for the site
+        if not (is_session_of_owner_sites(request.user, session) or is_session_of_staff_sites(request.user, session)):
+            return render(request, 'permission_denied.html')
+
+        # Check if the session date is in the future
+        if session.date < date.today():
+            messages.error(request, "Cannot delete past sessions.")
+            return redirect('activity_detail', activity_id=session.activity.id)
+
+        return render(request, self.template_name, {'session': session})
+
+    def post(self, request, session_id, *args, **kwargs):
+        session = self.get_object(session_id)
+
+        # Check if the user is the owner or a staff member responsible for the site
+        if not (is_session_of_owner_sites(request.user, session) or is_session_of_staff_sites(request.user, session)):
+            return render(request, 'permission_denied.html')
+
+        # Check if the session date is in the future
+        if session.date < date.today():
+            messages.error(request, "Cannot delete past sessions.")
+            return redirect('activity_detail', activity_id=session.activity.id)
+
         # Assuming you want to perform the deletion when the form is submitted
         session.delete()
         redirect_url = 'activity_list'  # Replace with the name of your activity list URL
         return redirect('activity_detail', activity_id=session.activity.id)
-
-    return render(request, 'activity/session_delete.html', {'session': session})
 
 @login_required(login_url='login')
 @user_passes_test(is_institution_owner, login_url='login')
@@ -468,12 +605,12 @@ def user_session_registration(request, session_id, user_plan_id):
         # Convert session datetime to user's timezone without changing its time
         session_datetime_aware = make_aware(session_datetime, timezone=user_timezone)
         
-        print("Session Datetime (User's Timezone):", session_datetime_aware)
+        # print("Session Datetime (User's Timezone):", session_datetime_aware)
 
         allowed_status_change_time = session_datetime_aware - timedelta(hours=2)
 
-        print("User Current Time:", user_current_time)
-        print("Allowed Status Change Time:", allowed_status_change_time)
+        # print("User Current Time:", user_current_time)
+        # print("Allowed Status Change Time:", allowed_status_change_time)
 
         if user_current_time < allowed_status_change_time:
             existing_participant.assistance_status = 'registered'

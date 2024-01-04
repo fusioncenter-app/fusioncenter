@@ -126,7 +126,7 @@ class SelfRegistrationForm(forms.ModelForm):
 
     
         plan_pricing_choice = self.cleaned_data['plan_pricing']
-        print(plan_pricing_choice)
+        # print(plan_pricing_choice)
         plan_pricing_choice_split_result = plan_pricing_choice.split("-")
         choice_1 = plan_pricing_choice_split_result[0]
         choice_2 = plan_pricing_choice_split_result[1]

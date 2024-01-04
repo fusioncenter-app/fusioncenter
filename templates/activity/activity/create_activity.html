@@ -99,7 +99,7 @@
                         {% endif %} rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:ring-offset-gray-900 border-gray-600 placeholder-gray-400">
                         <option>Select Instructor</option>
                         {% for choice in form.instructor.field.queryset %}
-                        <option value="{{ choice.id }}" {% if choice.id == form.instructor.value %}selected{% endif %}>
+                        <option value="{{ choice.id }}" {% if choice.id == form.cleaned_data.instructor.id %}selected{% endif %}>
                             {{ choice.user.get_full_name }}
                         </option>
                     {% endfor %}

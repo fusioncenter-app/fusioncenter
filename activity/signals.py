@@ -4,32 +4,37 @@ from django.db.models.signals import post_save, pre_save, post_delete
 from django.dispatch import receiver
 from activity.models import Session, Participants
 from plans.models import UserPlan
-from .utils.signal_utils import should_participate, add_participant, remove_participant
+from .utils.signal_utils import should_participate, add_participant, remove_participant, create_participants_with_unlimited_plans
 
 @receiver(post_save, sender=Session)
-def update_participants(sender, instance, **kwargs):
+def update_participants(sender, instance, created, **kwargs):
     """
     Signal handler to update participants based on UserPlans when a Session is added or edited.
     """
-    # Get all participants for the session
-    participants = Participants.objects.filter(session=instance)
+    if created:  # Check if a new session is being created
+        create_participants_with_unlimited_plans(instance)
+    else:
+        # Get all participants for the session
+        participants = Participants.objects.filter(session=instance)
 
-    # Iterate through participants and check if they should still participate
-    for participant in participants:
-        user = participant.user
-        if not should_participate(user, instance):
-            # Remove participant if they should not participate
-            remove_participant(participant)
-    
-    # Get the UserPlans related to the session's activity
-    user_plans = UserPlan.objects.filter(plan_pricing__plan__activities=instance.activity)
+        # Iterate through participants and check if they should still participate
+        for participant in participants:
+            user = participant.user
+            if not should_participate(user, instance):
+                # Remove participant if they should not participate
+                remove_participant(participant)
+        
+        # Get the UserPlans related to the session's activity
+        user_plans = UserPlan.objects.filter(plan_pricing__plan__activities=instance.activity)
 
-    # Iterate through UserPlans and update participants based on logic
-    for user_plan in user_plans:
-        user = user_plan.user
-        if should_participate(user, instance):
-            # Add participant if they should participate
-            add_participant(user, instance, user_plan)
+        # Iterate through UserPlans and update participants based on logic
+        for user_plan in user_plans:
+            user = user_plan.user
+            if should_participate(user, instance):
+                # Add participant if they should participate
+                add_participant(user, instance, user_plan)
+
+
 
 
 @receiver(post_save, sender=Participants)
