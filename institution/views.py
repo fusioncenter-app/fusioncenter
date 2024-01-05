@@ -185,74 +185,73 @@ class EditSpaceView(View):
 
 ### STAFF
 
-# @login_required(login_url='login')
-# def staff_list(request):
-#     # Get the logged-in user
-#     user = request.user
+class StaffListView(View):
 
-#     # If the user is not authenticated, redirect them to the login page
-#     if not user.is_authenticated:
-#         return redirect('login')  # Make sure to replace 'login' with your actual login URL
+    template_name = 'institution/staff/staff_list.html'
 
-#     # If the user is an InstitutionOwner, retrieve their institution directly
-#     if user.groups.filter(name='InstitutionOwner').exists():
-#         institution = user.owned_institution
-#     else:
-#         # If the user is not an InstitutionOwner, you can handle this case accordingly
-#         return render(request, 'institution/not_institution_owner.html')
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')(view))
 
-#     staff_members = institution.staff_members.all()
+    def get(self, request, *args, **kwargs):
+        # Get the logged-in user
+        user = request.user
 
-#     context = {
-#         'institution': institution,
-#         'staff_members': staff_members,
-#     }
+        institution = user.owned_institution
 
-#     return render(request, 'institution/staff_list.html', context)
+        staff_members = institution.staff_members.all()
 
-# @login_required
-# def create_staff(request):
-#     template_name = 'your_template_name.html'  # Set your template name
+        context = {
+            'institution': institution,
+            'staff_members': staff_members,
+        }
 
-#     if request.method == 'POST':
-#         form = StaffForm(request.POST, owner=request.user)
+        return render(request, self.template_name, context)
 
-#         if form.is_valid():
-#             staff_instance = form.save(commit=False)
-#             staff_instance.institution = request.user.institution  # Access the institution directly from the user
-#             staff_instance.save()
-#             return redirect('success_url')  # Redirect to a success page
-#     else:
-#         form = StaffForm(owner=request.user)
+@login_required
+def create_staff(request):
+    template_name = 'your_template_name.html'  # Set your template name
+
+    if request.method == 'POST':
+        form = StaffForm(request.POST, owner=request.user)
+
+        if form.is_valid():
+            staff_instance = form.save(commit=False)
+            staff_instance.institution = request.user.institution  # Access the institution directly from the user
+            staff_instance.save()
+            return redirect('success_url')  # Redirect to a success page
+    else:
+        form = StaffForm(owner=request.user)
 
     
 
-#     return render(request, 'institution/create_staff.html', {'form': form})
+    return render(request, 'institution/create_staff.html', {'form': form})
 
 
-# @login_required(login_url='login')
-# def edit_staff(request, staff_id):
-#     staff = get_object_or_404(Staff, id=staff_id)
+@login_required(login_url='login')
+def edit_staff(request, staff_id):
+    staff = get_object_or_404(Staff, id=staff_id)
 
-#     if request.method == 'POST':
-#         form = StaffForm(request.POST, instance=staff)
-#         if form.is_valid():
-#             form.save()
-#             return redirect('staff_list')
-#     else:
-#         form = StaffForm(instance=staff)
+    if request.method == 'POST':
+        form = StaffForm(request.POST, instance=staff)
+        if form.is_valid():
+            form.save()
+            return redirect('staff_list')
+    else:
+        form = StaffForm(instance=staff)
 
-#     return render(request, 'institution/edit_staff.html', {'form': form, 'staff': staff})
+    return render(request, 'institution/edit_staff.html', {'form': form, 'staff': staff})
 
-# @login_required(login_url='login')
-# def delete_staff(request, staff_id):
-#     staff = get_object_or_404(Staff, id=staff_id)
+@login_required(login_url='login')
+def delete_staff(request, staff_id):
+    staff = get_object_or_404(Staff, id=staff_id)
     
-#     if request.method == 'POST':
-#         staff.delete()
-#         return redirect('staff_list')
+    if request.method == 'POST':
+        staff.delete()
+        return redirect('staff_list')
 
-#     return render(request, 'institution/delete_staff.html', {'staff': staff})
+    return render(request, 'institution/delete_staff.html', {'staff': staff})
 
 
 ### INSTRUCTOR

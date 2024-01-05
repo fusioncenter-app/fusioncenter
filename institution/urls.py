@@ -8,6 +8,12 @@ from .views import (
     InstructorListView,
     CreateInstructorView,
     DeleteInstructorView,
+
+
+    StaffListView,
+    create_staff,
+    edit_staff,
+    delete_staff
 )
 
 
@@ -24,10 +30,10 @@ urlpatterns = [
     path('space/edit_space/<int:space_id>/', EditSpaceView.as_view(), name='edit_space'),
 
     # Staff URLs
-    # path('staff_list/', views.staff_list, name='staff_list'),
-    # path('create_staff/', views.create_staff, name='create_staff'),
-    # path('edit_staff/<int:staff_id>/', views.edit_staff, name='edit_staff'),
-    # path('delete_staff/<int:staff_id>/', views.delete_staff, name='delete_staff'),
+    path('staff/list/', StaffListView.as_view(), name='staff_list'),
+    path('create_staff/', create_staff, name='create_staff'),
+    path('edit_staff/<int:staff_id>/', edit_staff, name='edit_staff'),
+    path('delete_staff/<int:staff_id>/', delete_staff, name='delete_staff'),
 
     # Instructor URLs
     path('instructor_list/', InstructorListView.as_view(), name='instructor_list'),

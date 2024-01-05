@@ -143,9 +143,11 @@ class AssignUserPlanForm(forms.Form):
         except User.DoesNotExist:
             raise forms.ValidationError('User with this email does not exist.')
         
+        # Check if the plan type is limited
+        if self.plan_pricing.plan.plan_type == 'unlimited':
         # Check if the user is already assigned to the same plan pricing
-        if UserPlan.objects.filter(user=user, plan_pricing=self.plan_pricing).exists():
-            raise forms.ValidationError('User is already assigned to this plan pricing.')
+            if UserPlan.objects.filter(user=user, plan_pricing=self.plan_pricing).exists():
+                raise forms.ValidationError('User is already assigned to this plan pricing.')
 
         return user
 
@@ -182,8 +184,10 @@ class EditUserPlanForm(forms.ModelForm):
         cleaned_data = super().clean()
         email = self.instance.user.email
 
-        # Check if the user is already assigned to the same plan pricing
-        if UserPlan.objects.filter(user__email=email, plan_pricing=self.instance.plan_pricing).exclude(pk=self.instance.pk).exists():
-            raise forms.ValidationError('User is already assigned to this plan pricing.')
+        # Check if the plan type is limited
+        if self.instance.plan_pricing.plan.plan_type == 'unlimited':
+            # Check if the user is already assigned to the same plan pricing
+            if UserPlan.objects.filter(user__email=email, plan_pricing=self.instance.plan_pricing).exclude(pk=self.instance.pk).exists():
+                raise forms.ValidationError('User is already assigned to this plan pricing.')
 
         return cleaned_data

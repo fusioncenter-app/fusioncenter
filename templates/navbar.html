@@ -99,6 +99,13 @@
                   ">Institution</a>
                 </li>
                 <li>
+                  <a href="{% url 'staff_list' %}" class="block px-4 py-2 hover:bg-gray-600 text-gray-200 hover:text-white 
+                  {% if request.resolver_match.url_name == 'staff_list' or request.resolver_match.url_name == 'staff_create' or request.resolver_match.url_name == 'staff_delete' or request.resolver_match.url_name == 'staff_edit' %}
+                  text-white bg-gray-600
+                  {% endif  %}
+                  ">Staff</a>
+                </li>
+                <li>
                   <a href="{% url 'instructor_list' %}" class="block px-4 py-2 hover:bg-gray-600 text-gray-200 hover:text-white 
                   {% if request.resolver_match.url_name == 'instructor_list' %}
                   text-white bg-gray-600

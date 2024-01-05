@@ -145,56 +145,72 @@ class EditPlanView(View):
             return redirect('plan_list')
 
         return render(request, self.template_name, {'form': form, 'site': site, 'plan': plan})
-
-@login_required(login_url='login')
-@user_passes_test(is_institution_owner, login_url='login')
-def edit_plan(request, plan_id):
-    plan = get_object_or_404(Plan, id=plan_id)
-
-    site = plan.site
-
-    if request.method == 'POST':
-        form = EditPlanForm(request.POST, site=site, instance=plan)
-        if form.is_valid():
-            updated_plan = form.save(commit=False)
-
-            selected_activity_ids = request.POST.getlist('activities')
-            form.set_activities(selected_activity_ids)
-
-            updated_plan.site = site
-            form.save()
-            return redirect('plan_list')
-    else:
-        form = EditPlanForm(instance=plan, site=site)
-
-    return render(request, 'plan/edit_plan.html', {'form': form, 'site': site, 'plan': plan})
-
-@login_required(login_url='login')
-@user_passes_test(is_institution_owner, login_url='login')
-def plan_detail(request, plan_id):
     
-    plan = get_object_or_404(Plan, id=plan_id)
 
-    context = {
-        'plan': plan,
-    }
+class PlanDetailView(View):
+    template_name = 'plan/plan_detail.html'
 
-    return render(request, 'plan/plan_detail.html', context)
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')(view))
 
+    def get(self, request, plan_id):
+        
+        plan = get_object_or_404(Plan, id=plan_id)
+        site = plan.site
+        # Check if the user is the owner or a staff member responsible for the site
+        if not (is_owner_of_site(request.user, site) or is_staff_responsible_for_site(request.user, site)):
+            return render(request, 'permission_denied.html')
+        
+        context = {
+            'plan': plan,
+        }
 
-@login_required(login_url='login')
-@user_passes_test(is_institution_owner, login_url='login')
-def create_plan_pricing(request, plan_id):
-    plan = get_object_or_404(Plan, id=plan_id)
+        return render(request, self.template_name, context)
 
-    if request.method == 'POST':
+class CreatePlanPricingView(View):
+    template_name = 'plan/create_plan_pricing.html'
+
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')(view))
+
+    def get(self, request, plan_id):
+        plan = get_object_or_404(Plan, id=plan_id)
+
+        site = plan.site
+        # Check if the user is the owner or a staff member responsible for the site
+        if not (is_owner_of_site(request.user, site) or is_staff_responsible_for_site(request.user, site)):
+            return render(request, 'permission_denied.html')
+
+        if plan.plan_type == 'unlimited':
+            form = CreateUnlimitedPlanPricingForm()
+        elif plan.plan_type == 'limited':
+            form = CreateLimitedPlanPricingForm()
+
+        context = {
+            'form': form,
+            'plan': plan,
+        }
+
+        return render(request, self.template_name, context)
+
+    def post(self, request, plan_id):
+        plan = get_object_or_404(Plan, id=plan_id)
+
+        site = plan.site
+        # Check if the user is the owner or a staff member responsible for the site
+        if not (is_owner_of_site(request.user, site) or is_staff_responsible_for_site(request.user, site)):
+            return render(request, 'permission_denied.html')
+
         if plan.plan_type == 'unlimited':
             form = CreateUnlimitedPlanPricingForm(request.POST)
         elif plan.plan_type == 'limited':
             form = CreateLimitedPlanPricingForm(request.POST)
 
         if form.is_valid():
-
             pricing = form.save(commit=False)
             
             # Set status as 'active' directly
@@ -207,206 +223,298 @@ def create_plan_pricing(request, plan_id):
             pricing.plan = plan
             form.save()
             return redirect('plan_detail', plan_id=plan.id)
-    else:
-        if plan.plan_type == 'unlimited':
-            form = CreateUnlimitedPlanPricingForm()
-        elif plan.plan_type == 'limited':
-            form = CreateLimitedPlanPricingForm()
 
-    context = {
-        'form': form,
-        'plan': plan,
-    }
+        context = {
+            'form': form,
+            'plan': plan,
+        }
 
-    return render(request, 'plan/create_plan_pricing.html', context)
+        return render(request, self.template_name, context)
 
+class EditPlanPricingView(View):
+    template_name = 'plan/edit_plan_pricing.html'
 
-@login_required(login_url='login')
-@user_passes_test(is_institution_owner, login_url='login')
-def edit_plan_pricing(request, plan_id, pricing_id):
-    plan = get_object_or_404(Plan, id=plan_id)
-    pricing = get_object_or_404(PlanPricing, id=pricing_id)
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')(view))
 
-    if request.method == 'POST':
-        if plan.plan_type == 'unlimited':
-            form = EditUnlimitedPlanPricingForm(request.POST, instance=pricing)
-        elif plan.plan_type == 'limited':
-            form = EditLimitedPlanPricingForm(request.POST, instance=pricing)
+    def get(self, request, plan_id, pricing_id):
+        plan = get_object_or_404(Plan, id=plan_id)
+        site = plan.site
+        # Check if the user is the owner or a staff member responsible for the site
+        if not (is_owner_of_site(request.user, site) or is_staff_responsible_for_site(request.user, site)):
+            return render(request, 'permission_denied.html')
         
-        if form.is_valid():
+        pricing = get_object_or_404(PlanPricing, id=pricing_id)
 
-            pricing = form.save(commit=False)
-            
-            # Set status as 'active' directly
-            pricing.status = 'active'
+        # Check if the user is the owner
+        if not is_institution_owner(request.user):
+            return render(request, 'permission_denied.html')
 
-            # If the plan is unlimited, exclude sessions_quantity field
-            if plan.plan_type == 'unlimited':
-                pricing.sessions_quantity = 0
-
-            pricing.plan = plan
-            form.save()
-            return redirect('plan_detail', plan_id=plan.id)
-    else:
         initial_data = {
             'from_date': pricing.from_date.strftime('%Y-%m-%d'),
             'to_date': pricing.to_date.strftime('%Y-%m-%d'),
         }
         
         if plan.plan_type == 'unlimited':
-            form = EditUnlimitedPlanPricingForm(instance=pricing,initial=initial_data)
+            form = EditUnlimitedPlanPricingForm(instance=pricing, initial=initial_data)
         elif plan.plan_type == 'limited':
-            form = EditLimitedPlanPricingForm(instance=pricing,initial=initial_data)
+            form = EditLimitedPlanPricingForm(instance=pricing, initial=initial_data)
 
-    context = {
-        'form': form,
-        'plan': plan,
-        'pricing': pricing,
-    }
+        context = {
+            'form': form,
+            'plan': plan,
+            'pricing': pricing,
+        }
 
-    return render(request, 'plan/edit_plan_pricing.html', context)
+        return render(request, self.template_name, context)
+
+    def post(self, request, plan_id, pricing_id):
+        plan = get_object_or_404(Plan, id=plan_id)
+        site = plan.site
+        # Check if the user is the owner or a staff member responsible for the site
+        if not (is_owner_of_site(request.user, site) or is_staff_responsible_for_site(request.user, site)):
+            return render(request, 'permission_denied.html')
+        
+        pricing = get_object_or_404(PlanPricing, id=pricing_id)
+
+        # Check if the user is the owner
+        if not is_institution_owner(request.user):
+            return render(request, 'permission_denied.html')
+
+        if plan.plan_type == 'unlimited':
+            form = EditUnlimitedPlanPricingForm(request.POST, instance=pricing)
+        elif plan.plan_type == 'limited':
+            form = EditLimitedPlanPricingForm(request.POST, instance=pricing)
+
+        if form.is_valid():
+            pricing = form.save(commit=False)
+            
+            # Set status as 'active' directly
+            pricing.status = 'active'
+
+            # If the plan is unlimited, exclude sessions_quantity field
+            if plan.plan_type == 'unlimited':
+                pricing.sessions_quantity = 0
+
+            pricing.plan = plan
+            form.save()
+            return redirect('plan_detail', plan_id=plan.id)
+
+        context = {
+            'form': form,
+            'plan': plan,
+            'pricing': pricing,
+        }
+
+        return render(request, self.template_name, context)
+
+class PlanPricingDetailView(View):
+    template_name = 'plan/plan_pricing_detail.html'
+
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')(view))
+
+    def get(self, request, plan_pricing_id):
+        plan_pricing = get_object_or_404(PlanPricing, id=plan_pricing_id)
+        site = plan_pricing.plan.site
+        # Check if the user is the owner or a staff member responsible for the site
+        if not (is_owner_of_site(request.user, site) or is_staff_responsible_for_site(request.user, site)):
+            return render(request, 'permission_denied.html')
+
+        context = {
+            'plan_pricing': plan_pricing,
+            'PAYMENT_CHOICES': UserPlan.PAYMENT_CHOICES
+        }
+
+        return render(request, self.template_name, context)
 
 
-@login_required(login_url='login')
-@user_passes_test(is_institution_owner, login_url='login')
-def plan_pricing_detail(request, plan_pricing_id):
+class AssignUserPlanView(View):
+    template_name = 'plan/assign_user_plan.html'
 
-    plan_pricing = get_object_or_404(PlanPricing, id=plan_pricing_id)
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')(view))
 
-    context = {
-        'plan_pricing': plan_pricing,
-        'PAYMENT_CHOICES': UserPlan.PAYMENT_CHOICES
-    }
+    def get(self, request, pricing_id):
+        pricing = PlanPricing.objects.get(id=pricing_id)
 
-    return render(request, 'plan/plan_pricing_detail.html', context)
+        site = pricing.plan.site
+        # Check if the user is the owner or a staff member responsible for the site
+        if not (is_owner_of_site(request.user, site) or is_staff_responsible_for_site(request.user, site)):
+            return render(request, 'permission_denied.html')
+        
+        form = AssignUserPlanForm()
+        return render(request, self.template_name, {'form': form, 'pricing': pricing})
 
-@login_required(login_url='login')
-@user_passes_test(is_institution_owner, login_url='login')
-def assign_user_plan(request, pricing_id):
-    pricing = PlanPricing.objects.get(id=pricing_id)
+    def post(self, request, pricing_id):
+        pricing = PlanPricing.objects.get(id=pricing_id)
 
-    if request.method == 'POST':
+        site = pricing.plan.site
+        # Check if the user is the owner or a staff member responsible for the site
+        if not (is_owner_of_site(request.user, site) or is_staff_responsible_for_site(request.user, site)):
+            return render(request, 'permission_denied.html')
+
         form = AssignUserPlanForm(request.POST, plan_pricing=pricing, created_by=request.user)
+
         if form.is_valid():
             form.save_user_plan()
             return redirect('plan_pricing_detail', plan_pricing_id=pricing_id)
-    else:
-        form = AssignUserPlanForm()
 
-    return render(request, 'plan/assign_user_plan.html', {'form': form, 'pricing': pricing})
+        return render(request, self.template_name, {'form': form, 'pricing': pricing})
+    
+class EditUserPlanView(View):
+    template_name = 'plan/edit_user_plan.html'
 
-@login_required(login_url='login')
-@user_passes_test(is_institution_owner, login_url='login')
-def edit_user_plan(request, user_plan_id):
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')(view))
 
-    user_plan = get_object_or_404(UserPlan, pk=user_plan_id)
+    def get(self, request, user_plan_id):
+        user_plan = get_object_or_404(UserPlan, pk=user_plan_id)
 
-    if request.method == 'POST':    
+        site = user_plan.plan_pricing.plan.site
+        # Check if the user is the owner or a staff member responsible for the site
+        if not (is_owner_of_site(request.user, site) or is_staff_responsible_for_site(request.user, site)):
+            return render(request, 'permission_denied.html')
+
+        form = EditUserPlanForm(instance=user_plan)
+        context = {'form': form, 'pricing': user_plan.plan_pricing.id, 'user_plan': user_plan}
+        return render(request, self.template_name, context)
+
+    def post(self, request, user_plan_id):
+        user_plan = get_object_or_404(UserPlan, pk=user_plan_id)
+
+        site = user_plan.plan_pricing.plan.site
+        # Check if the user is the owner or a staff member responsible for the site
+        if not (is_owner_of_site(request.user, site) or is_staff_responsible_for_site(request.user, site)):
+            return render(request, 'permission_denied.html')
+
         form = EditUserPlanForm(request.POST, instance=user_plan)
+
         if form.is_valid():
             form.save()
             return redirect('plan_pricing_detail', plan_pricing_id=user_plan.plan_pricing.id)
-    else:
-        form = EditUserPlanForm(instance=user_plan)
 
-    context = {
-        'form': form, 
-        'pricing': user_plan.plan_pricing.id, 
-        'user_plan': user_plan
+        context = {'form': form, 'pricing': user_plan.plan_pricing.id, 'user_plan': user_plan}
+        return render(request, self.template_name, context)
+
+
+class PlanPricingSessionListView(View):
+
+    template_name = 'plan/plan_pricing_session_list.html'
+
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')(view))
+
+    def get(self, request, plan_pricing_id):
+        
+        # Get the PlanPricing object
+        plan_pricing = get_object_or_404(PlanPricing, id=plan_pricing_id)
+
+        site = plan_pricing.plan.site
+        # Check if the user is the owner or a staff member responsible for the site
+        if not (is_owner_of_site(request.user, site) or is_staff_responsible_for_site(request.user, site)):
+            return render(request, 'permission_denied.html')
+
+        # Get the related plan activities
+        plan_activities = plan_pricing.plan.activities.all()
+
+        # Get the sessions within the date range of the plan pricing
+        sessions = Session.objects.filter(
+            activity__in=plan_activities,
+            date__range=[plan_pricing.from_date, plan_pricing.to_date]
+        ).order_by('date', 'from_time')
+
+        sessions = sessions.order_by('date', 'from_time')
+
+        for session in sessions:
+            # Calculate counts for different assistance_status
+            session.registered_count = Participants.objects.filter(session=session, assistance_status='registered').count()
+            session.present_count = Participants.objects.filter(session=session, assistance_status='present').count()
+            session.absent_count = Participants.objects.filter(session=session, assistance_status='absent').count()
+
+            # Calculate total_participants and availability
+            session.total_participants = session.registered_count + session.present_count + session.absent_count
+            session.availability = session.session_capacity - session.total_participants
+
+            # Calculate all_participants_present using Case expression
+            if session.registered_count > 0:
+                session.all_participants_present = False
+            elif session.total_participants == 0:
+                session.all_participants_present = None
+            else:
+                session.all_participants_present = True
+
+        today = date.today()
+
+        context = {
+            'plan_pricing': plan_pricing,
+            'sessions': sessions,
+            'today': today,
         }
 
-    return render(request, 'plan/edit_user_plan.html', context)
+        return render(request, self.template_name, context)
 
-@login_required(login_url='login')
-@user_passes_test(is_institution_owner, login_url='login')
-def plan_pricing_session_list(request, plan_pricing_id):
-    # Get the PlanPricing object
-    plan_pricing = get_object_or_404(PlanPricing, id=plan_pricing_id)
 
-    # Get the related plan activities
-    plan_activities = plan_pricing.plan.activities.all()
+class ParticipantPlanPricingSessionListView(View):
+    
+    template_name = 'plan/participant_plan_pricing_session_list.html'
 
-    # Get the sessions within the date range of the plan pricing
-    sessions = Session.objects.filter(
-        activity__in=plan_activities,
-        date__range=[plan_pricing.from_date, plan_pricing.to_date]
-    ).order_by('date', 'from_time')
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')(view))
 
-    sessions = sessions.order_by('date', 'from_time')
+    def get(self, request, user_plan_id):
+        
+        user_plan = get_object_or_404(UserPlan, id=user_plan_id)
 
-    for session in sessions:
-        # Calculate counts for different assistance_status
-        session.registered_count = Participants.objects.filter(session=session, assistance_status='registered').count()
-        session.present_count = Participants.objects.filter(session=session, assistance_status='present').count()
-        session.absent_count = Participants.objects.filter(session=session, assistance_status='absent').count()
+        site = user_plan.plan_pricing.plan.site
+        # Check if the user is the owner or a staff member responsible for the site
+        if not (is_owner_of_site(request.user, site) or is_staff_responsible_for_site(request.user, site)):
+            return render(request, 'permission_denied.html')
 
-        # Calculate total_participants and availability
-        session.total_participants = session.registered_count + session.present_count + session.absent_count
-        session.availability = session.session_capacity - session.total_participants
+        today = date.today()
 
-        # Calculate all_participants_present using Case expression
-        if session.registered_count > 0:
-            session.all_participants_present = False
-        elif session.total_participants == 0:
-            session.all_participants_present = None
-        else:
-            session.all_participants_present = True
+        sessions = Session.objects.filter(
+            participants__user=user_plan.user,
+            participants__user_plan=user_plan.id
+        ).order_by('date', 'from_time')
 
-    today = date.today()
+        for session in sessions:
+            # Calculate counts for different assistance_status
+            session.registered_count = Participants.objects.filter(session=session, assistance_status='registered').count()
+            session.present_count = Participants.objects.filter(session=session, assistance_status='present').count()
+            session.absent_count = Participants.objects.filter(session=session, assistance_status='absent').count()
 
-    context = {
-        'plan_pricing': plan_pricing,
-        'sessions': sessions,
-        'today': today,
-    }
+            # Calculate total_participants and availability
+            session.total_participants = session.registered_count + session.present_count + session.absent_count
+            session.availability = session.session_capacity - session.total_participants
 
-    return render(request, 'plan/plan_pricing_session_list.html', context)
+        # Loop through sessions and obtain user's session participants
+        for session in sessions:
+            participant = Participants.objects.filter(user=user_plan.user, session=session).first()
+            if participant:
+                session.assistance_status = participant.assistance_status
+                session.participant_id = participant.id
+                session.session_user_plan_id = participant.user_plan.id
 
-@login_required(login_url='login')
-@user_passes_test(is_institution_owner, login_url='login')
-def participant_plan_pricing_session_list(request, user_plan_id):
-    user_plan = get_object_or_404(UserPlan, id=user_plan_id)
+        context = {
+            'user_plan': user_plan,
+            'sessions': sessions,
+            'today': today,
+        }
 
-    # Check if the user making the request is the owner of the institution
-    owner = request.user
-    institution = user_plan.plan_pricing.plan.site.institution
-
-    if institution.owner != owner:
-        messages.error(request, "You do not have permission to view this user's sessions.")
-        return redirect('plan_pricing_detail', plan_pricing_id=user_plan.plan_pricing.id)
-
-    today = date.today()
-
-    sessions = Session.objects.filter(
-        participants__user=user_plan.user,
-        participants__user_plan=user_plan.id
-    ).order_by('date','from_time')
-
-    for session in sessions:
-        # Calculate counts for different assistance_status
-        session.registered_count = Participants.objects.filter(session=session, assistance_status='registered').count()
-        session.present_count = Participants.objects.filter(session=session, assistance_status='present').count()
-        session.absent_count = Participants.objects.filter(session=session, assistance_status='absent').count()
-
-        # Calculate total_participants and availability
-        session.total_participants = session.registered_count + session.present_count + session.absent_count
-        session.availability = session.session_capacity - session.total_participants
-
-    # Loop through sessions and obtain user's session participants
-    for session in sessions:
-        participant = Participants.objects.filter(user=user_plan.user, session=session).first()
-        if participant:
-            session.assistance_status = participant.assistance_status
-            session.participant_id = participant.id
-            session.session_user_plan_id = participant.user_plan.id
-
-    context = {
-        'user_plan': user_plan,
-        'sessions': sessions,
-        'today': today,
-    }
-
-    return render(request, 'plan/participant_plan_pricing_session_list.html', context)
+        return render(request, self.template_name, context)
 
 
 
@@ -416,47 +524,131 @@ def participant_plan_pricing_session_list(request, user_plan_id):
 
 '''
 
+class ParticipantPlanListView(View):
+    template_name = 'participant/plan_list.html'
 
-@login_required(login_url='login')
-def participant_plan_list(request):
-    user_plans = UserPlan.objects.filter(user=request.user)
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(view)
 
-    # Create a dictionary to store plans by site
-    plans_by_site = {}
+    def get(self, request, *args, **kwargs):
+        user_plans = UserPlan.objects.filter(user=request.user)
 
-    for user_plan in user_plans:
-        site = user_plan.plan_pricing.plan.site
+        # Create a dictionary to store plans by site
+        plans_by_site = {}
 
-        # If the site is not in the dictionary, create an empty list
-        if site not in plans_by_site:
-            plans_by_site[site] = []
+        for user_plan in user_plans:
+            site = user_plan.plan_pricing.plan.site
 
-        # Check if the plan is already added for the site
-        plan_already_added = any(
-            plan_info['plan_id'] == user_plan.plan_pricing.plan.id for plan_info in plans_by_site[site]
-        )
+            # If the site is not in the dictionary, create an empty list
+            if site not in plans_by_site:
+                plans_by_site[site] = []
 
-        if not plan_already_added:
-            # Get the activities associated with the plan
-            activities = user_plan.plan_pricing.plan.activities.all()
+            # Check if the plan is already added for the site
+            plan_already_added = any(
+                plan_info['plan_id'] == user_plan.plan_pricing.plan.id for plan_info in plans_by_site[site]
+            )
 
-            plan_info = {
-                'plan_id': user_plan.plan_pricing.plan.id,
-                'institution_name': site.institution.name,
-                'plan_name': user_plan.plan_pricing.plan.name,
-                'plan_type': user_plan.plan_pricing.plan.plan_type,
-                'status': user_plan.plan_pricing.plan.status,
-                'from_date': user_plan.plan_pricing.from_date,
-                'to_date': user_plan.plan_pricing.to_date,
-                'created_at': user_plan.created_at,
-                'created_by': user_plan.created_by.email if user_plan.created_by else None,
-                'activities': activities,  # Add activities to the plan_info dictionary
-                # Add other plan details as needed
-            }
+            if not plan_already_added:
+                # Get the activities associated with the plan
+                activities = user_plan.plan_pricing.plan.activities.all()
 
-            plans_by_site[site].append(plan_info)
+                plan_info = {
+                    'plan_id': user_plan.plan_pricing.plan.id,
+                    'institution_name': site.institution.name,
+                    'plan_name': user_plan.plan_pricing.plan.name,
+                    'plan_type': user_plan.plan_pricing.plan.plan_type,
+                    'status': user_plan.plan_pricing.plan.status,
+                    'from_date': user_plan.plan_pricing.from_date,
+                    'to_date': user_plan.plan_pricing.to_date,
+                    'created_at': user_plan.created_at,
+                    'created_by': user_plan.created_by.email if user_plan.created_by else None,
+                    'activities': activities,  # Add activities to the plan_info dictionary
+                    # Add other plan details as needed
+                }
 
-    return render(request, 'participant/plan_list.html', {'plans_by_site': plans_by_site})
+                plans_by_site[site].append(plan_info)
+
+        return render(request, self.template_name, {'plans_by_site': plans_by_site})
+
+
+class ParticipantPlanDetailView(View):
+    
+    template_name = 'participant/plan_detail.html'
+
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(view)
+
+    def get(self, request, plan_id, *args, **kwargs):
+        
+        # Get the plan
+        plan = get_object_or_404(Plan, id=plan_id)
+
+        # Get all user plans for the specified plan assigned to the user
+        user_plans = UserPlan.objects.filter(user=request.user, plan_pricing__plan=plan)
+
+        context = {
+            'plan': plan,
+            'user_plans': user_plans,
+        }
+
+        return render(request, self.template_name, context)
+
+
+class ParticipantPlanPricingSessionsView(View):
+
+    template_name = 'participant/session_list.html'
+
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(view)
+
+    def get(self, request, user_plan_id, *args, **kwargs):
+        # Get the UserPlan object
+        user_plan = get_object_or_404(UserPlan, user=request.user, id=user_plan_id)
+
+        # Get the PlanPricing object associated with the UserPlan
+        plan_pricing = user_plan.plan_pricing
+
+        # Get the related plan activities
+        plan_activities = plan_pricing.plan.activities.all()
+
+        # Get the sessions within the date range of the plan pricing
+        sessions = Session.objects.filter(
+            activity__in=plan_activities,
+            date__range=[plan_pricing.from_date, plan_pricing.to_date]
+        ).annotate(
+            registered_count=Count('participants', filter=Q(participants__assistance_status='registered')),
+            present_count=Count('participants', filter=Q(participants__assistance_status='present')),
+            absent_count=Count('participants', filter=Q(participants__assistance_status='absent')),
+            total_participants=F('registered_count') + F('present_count') + F('absent_count'),
+            availability=F('session_capacity') - F('total_participants')
+        ).order_by('date')
+
+        for session in sessions:
+            participant = Participants.objects.filter(user=request.user, session=session).first()
+            session.assistance_status = participant.assistance_status if participant else None
+            session.session_user_plan_id = participant.user_plan.id if participant else user_plan.id
+
+        context = {
+            'plan_pricing': plan_pricing,
+            'sessions': sessions,
+            'user_plan': user_plan,
+            'today': date.today(),
+        }
+
+        return render(request, self.template_name, context)
+
+
+
+
+### HTMX
+
+
 
 @login_required(login_url='login')
 def plan_info_htmx(request, plan_id,):
@@ -467,65 +659,3 @@ def plan_info_htmx(request, plan_id,):
     updated_inner_html = render_to_string('plans/htmx/plan_info.html', {'plan': plan}, request=request)
 
     return HttpResponse(updated_inner_html)
-
-@login_required(login_url='login')
-def participant_plan_detail(request, plan_id):
-    # Get the plan
-    plan = get_object_or_404(Plan, id=plan_id)
-
-    # Get all user plans for the specified plan assigned to the user
-    user_plans = UserPlan.objects.filter(user=request.user, plan_pricing__plan=plan)
-
-    # Check if the user is assigned to the plan
-    if not user_plans.exists():
-        # Handle the case where the user is not assigned to the plan
-        return render(request, 'participant/not_assigned.html')
-
-    # Get all plan pricings assigned to the user for the specified plan
-    # user_plan_pricings = PlanPricing.objects.filter(userplan__in=user_plans)
-
-    context = {
-        'plan': plan,
-        'user_plans': user_plans,
-    }
-
-    return render(request, 'participant/plan_detail.html', context)
-
-@login_required(login_url='login')
-def participant_plan_pricing_sessions(request, user_plan_id):
-    # Get the UserPlan object
-    user_plan = get_object_or_404(UserPlan, user=request.user, id=user_plan_id)
-
-    # Get the PlanPricing object associated with the UserPlan
-    plan_pricing = user_plan.plan_pricing
-
-    # Get the related plan activities
-    plan_activities = plan_pricing.plan.activities.all()
-
-    # Get the sessions within the date range of the plan pricing
-    sessions = Session.objects.filter(
-        activity__in=plan_activities,
-        date__range=[plan_pricing.from_date, plan_pricing.to_date]
-    ).annotate(
-        registered_count=Count('participants', filter=Q(participants__assistance_status='registered')),
-        present_count=Count('participants', filter=Q(participants__assistance_status='present')),
-        absent_count=Count('participants', filter=Q(participants__assistance_status='absent')),
-        total_participants=F('registered_count') + F('present_count') + F('absent_count'),
-        availability=F('session_capacity') - F('total_participants')
-    ).order_by('date')
-
-    for session in sessions:
-        participant = Participants.objects.filter(user=request.user, session=session).first()
-        session.assistance_status = participant.assistance_status if participant else None
-        session.session_user_plan_id = participant.user_plan.id if participant else user_plan.id
-
-    context = {
-        'plan_pricing': plan_pricing,
-        'sessions': sessions,
-        'user_plan': user_plan,
-        'today': date.today(),
-    }
-
-    return render(request, 'participant/session_list.html', context)
-
-

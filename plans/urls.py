@@ -1,32 +1,36 @@
 # plans/urls.py
 from django.urls import path
 from .views import (
+
     PlanListView, CreatePlanView, EditPlanView, 
-    plan_detail, create_plan_pricing, edit_plan_pricing, plan_pricing_detail,
-    assign_user_plan, edit_user_plan,
+    PlanDetailView, CreatePlanPricingView, EditPlanPricingView, PlanPricingDetailView,
+    AssignUserPlanView, EditUserPlanView, PlanPricingSessionListView,ParticipantPlanPricingSessionListView,
     
-    participant_plan_list, participant_plan_detail, participant_plan_pricing_sessions,
-    plan_pricing_session_list,participant_plan_pricing_session_list,
+    ParticipantPlanListView, ParticipantPlanDetailView, ParticipantPlanPricingSessionsView,
+    
     plan_info_htmx
 )
 
 urlpatterns = [
-    path('plan_list/', PlanListView.as_view(), name='plan_list'),
-    path('create_plan/<int:site_id>/', CreatePlanView.as_view(), name='create_plan'),
-    path('edit_plan/<int:plan_id>/', EditPlanView.as_view(), name='edit_plan'),
-    path('plan_detail/<int:plan_id>/', plan_detail, name='plan_detail'),
-    path('plan/<int:plan_id>/create_pricing/', create_plan_pricing, name='create_plan_pricing'),
-    # path('plan/<int:plan_id>/edit_pricing/<int:pricing_id>/', edit_plan_pricing, name='edit_plan_pricing'),
-    path('plan_pricing_detail/<int:plan_pricing_id>/', plan_pricing_detail, name='plan_pricing_detail'),
-    path('assign_user_plan/<int:pricing_id>/', assign_user_plan, name='assign_user_plan'),
-    path('edit_user_plan/<int:user_plan_id>/', edit_user_plan, name='edit_user_plan'),
-    path('participant_plan_pricing_session_list/<int:user_plan_id>/', participant_plan_pricing_session_list, name='participant_plan_pricing_session_list'),
+    path('plan/list/', PlanListView.as_view(), name='plan_list'),
+    path('plan/create/<int:site_id>/', CreatePlanView.as_view(), name='create_plan'),
+    path('plan/edit/<int:plan_id>/', EditPlanView.as_view(), name='edit_plan'),
+    path('plan/detail/<int:plan_id>/', PlanDetailView.as_view(), name='plan_detail'),
+    path('plan_pricing/create/<int:plan_id>/', CreatePlanPricingView.as_view(), name='create_plan_pricing'),
+    # path('plan/<int:plan_id>/edit_pricing/<int:pricing_id>/', EditPlanPricingView.as_view(), name='edit_plan_pricing'),
+    path('plan_pricing/detail/<int:plan_pricing_id>/', PlanPricingDetailView.as_view(), name='plan_pricing_detail'),
+    path('user_plan/create/<int:pricing_id>/', AssignUserPlanView.as_view(), name='assign_user_plan'),
+    path('user_plan/edit/<int:user_plan_id>/', EditUserPlanView.as_view(), name='edit_user_plan'),
+
+    path('plan_pricing/session/list/<int:plan_pricing_id>/', PlanPricingSessionListView.as_view(), name='plan_pricing_session_list'),
+    path('plan_pricing/participant_session/list/<int:user_plan_id>/', ParticipantPlanPricingSessionListView.as_view(), name='participant_plan_pricing_session_list'),
 
     # participant urls
-    path('participant_plan_list/', participant_plan_list, name='participant_plan_list'),
-    path('participant_plan_detail/<int:plan_id>/', participant_plan_detail, name='participant_plan_detail'),
-    path('session_list/<int:user_plan_id>/', participant_plan_pricing_sessions, name='participant_plan_pricing_sessions'),
-    path('plan_pricing_session_list/<int:plan_pricing_id>/', plan_pricing_session_list, name='plan_pricing_session_list'),
+    path('participant_plan/list/', ParticipantPlanListView.as_view(), name='participant_plan_list'),
+    path('participant_plan/detail/<int:plan_id>/', ParticipantPlanDetailView.as_view(), name='participant_plan_detail'),
+    path('participant_plan_pricing/session/list/<int:user_plan_id>/', ParticipantPlanPricingSessionsView.as_view(), name='participant_plan_pricing_sessions'),
+    # path('plan_pricing_session_list/<int:plan_pricing_id>/', PlanPricingSessionListView.as_view(), name='plan_pricing_session_list'),
+    
     # htmx
     path('plan_info_htmx/<int:plan_id>', plan_info_htmx, name='plan_info_htmx'),
     
