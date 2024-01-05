@@ -9,6 +9,7 @@
             </svg>
             <h5 class="mb-1 text-xl font-medium text-white">Are you sure you want to delete:</h5>
             <span class="text-sm text-gray-400">{{ instructor.user.email }}</span>
+            <span class="text-sm text-gray-400">{{ instructor.user.get_full_name }}</span>
             <div class="flex mt-4 md:mt-6">
                 <form method="post" action="{% url 'delete_instructor' instructor.id %}">
                     {% csrf_token %}

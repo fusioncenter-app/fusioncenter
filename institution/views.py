@@ -11,6 +11,8 @@ from custom_user.models import User
 from .utils.permissions_utils import is_institution_owner, is_institution_instructor, is_institution_staff, is_owner_of_site, is_staff_responsible_for_site, is_owner_of_space, is_staff_responsible_for_space
 from django.contrib import messages
 
+from django.contrib.auth.models import Group
+
 ### INSTITUTION
 
 class InstitutionDetailView(View):
@@ -273,29 +275,29 @@ class EditStaffView(View):
 
         return render(request, self.template_name, {'form': form, 'staff': staff})
 
-@login_required(login_url='login')
-def edit_staff(request, staff_id):
-    staff = get_object_or_404(Staff, id=staff_id)
 
-    if request.method == 'POST':
-        form = EditStaffForm(request.POST, instance=staff)
-        if form.is_valid():
-            form.save()
-            return redirect('staff_list')
-    else:
-        form = EditStaffForm(instance=staff)
+class DeleteStaffView(View):
+    template_name = 'institution/staff/delete_staff.html'
 
-    return render(request, 'institution/staff/edit_staff.html', {'form': form, 'staff': staff})
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_owner(u), login_url='login')(view))
 
-@login_required(login_url='login')
-def delete_staff(request, staff_id):
-    staff = get_object_or_404(Staff, id=staff_id)
-    
-    if request.method == 'POST':
+    def get(self, request, staff_id, *args, **kwargs):
+        staff = get_object_or_404(Staff, id=staff_id)
+        return render(request, self.template_name, {'staff': staff})
+
+    def post(self, request, staff_id, *args, **kwargs):
+        staff = get_object_or_404(Staff, id=staff_id)
+
+        # Remove user from 'InstitutionStaff' group
+        institution_staff_group = Group.objects.get(name='InstitutionStaff')
+        staff.user.groups.remove(institution_staff_group)
+
         staff.delete()
         return redirect('staff_list')
 
-    return render(request, 'institution/delete_staff.html', {'staff': staff})
 
 
 ### INSTRUCTOR

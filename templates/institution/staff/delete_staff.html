@@ -1,1 +1,27 @@
+{% extends 'base.html' %}
 
+{% block content %}
+<div class="pt-4 px-2 flex flex-col items-center">
+    <div class="w-full max-w-sm border  rounded-lg shadow bg-gray-800 border-gray-700">
+        <div class="flex flex-col items-center my-4">
+            <svg class="mx-auto mb-4 w-12 h-12 text-gray-200" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 11V6m0 8h.01M19 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+            </svg>
+            <h5 class="mb-1 text-xl font-medium text-white">Are you sure you want to delete:</h5>
+            <span class="text-sm text-gray-400">{{ staff.user.email }}</span>
+            <span class="text-sm text-gray-400">{{ staff.user.get_full_name }}</span>
+            <div class="flex mt-4 md:mt-6">
+                <form method="post" action="{% url 'delete_staff' staff.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="inline-flex items-center px-4 py-2 text-sm font-medium text-center text-white  rounded-lg focus:ring-4 focus:outline-none bg-red-600 hover:bg-red-700 focus:ring-red-800">
+                        Delete
+                    </button>
+                </form>
+                <a href="{% url 'instructor_list' %}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-center border rounded-lg focus:ring-4 focus:outline-none  bg-gray-800 text-white border-gray-600 hover:bg-gray-700 hover:border-gray-700 focus:ring-gray-700 ms-3">
+                    Cancel
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
