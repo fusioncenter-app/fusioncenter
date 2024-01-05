@@ -68,53 +68,83 @@ class PlanListView(View):
 
         # Render the plans in a template
         return render(request, self.template_name, context)
+    
+class CreatePlanView(View):
+    template_name = 'plan/create_plan.html'
 
-@login_required(login_url='login')
-@user_passes_test(is_institution_owner, login_url='login')
-def plan_list(request):
-    # Get the institution owned by the current user
-    institution = Institution.objects.get(owner=request.user)
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')(view))
 
-    # Get the sites related to the institution
-    sites = institution.sites.all().order_by('name')
+    def get(self, request, site_id):
+        site = get_object_or_404(Site, id=site_id)
+        # Check if the user is the owner or a staff member responsible for the site
+        if not (is_owner_of_site(request.user, site) or is_staff_responsible_for_site(request.user, site)):
+            return render(request, 'permission_denied.html')
+        form = CreatePlanForm(site=site)
+        return render(request, self.template_name, {'form': form, 'site': site})
 
-    # Retrieve the plans associated with those sites and order them by site and plan name
-    plans_by_site = {}
-    for site in sites:
-        plans_by_site[site] = Plan.objects.filter(site=site).order_by('name')
-
-    context = {
-        'plans_by_site': plans_by_site,
-    }
-
-    # Render the plans in a template
-    return render(request, 'plan/plan_list.html', context)
-
-@login_required(login_url='login')
-@user_passes_test(is_institution_owner, login_url='login')
-def create_plan(request, site_id):
-    try:
-        site = Site.objects.get(id=site_id)
-    except Site.DoesNotExist:
-        raise Http404("Site does not exist")
-
-    if request.method == 'POST':
+    def post(self, request, site_id):
+        site = get_object_or_404(Site, id=site_id)
+        # Check if the user is the owner or a staff member responsible for the site
+        if not (is_owner_of_site(request.user, site) or is_staff_responsible_for_site(request.user, site)):
+            return render(request, 'permission_denied.html')
         form = CreatePlanForm(request.POST, site=site)
+
         if form.is_valid():
             plan = form.save(commit=False)
-
             selected_activity_ids = request.POST.getlist('activities')
             form.set_activities(selected_activity_ids)
-            # print("Selected Activities:", selected_activity_ids)
-            
             plan.site = site
-            form.save()  # Save the plan along with associated activities
+            form.save()
             return redirect('plan_list')
-    else:
-        form = CreatePlanForm(site=site)
 
-    return render(request, 'plan/create_plan.html', {'form': form, 'site': site})
+        return render(request, self.template_name, {'form': form, 'site': site})
 
+class EditPlanView(View):
+
+    template_name = 'plan/edit_plan.html'
+
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')(view))
+
+    def get(self, request, plan_id):
+        plan = get_object_or_404(Plan, id=plan_id)
+
+        site = plan.site
+        # Check if the user is the owner or a staff member responsible for the site
+        if not (is_owner_of_site(request.user, site) or is_staff_responsible_for_site(request.user, site)):
+            return render(request, 'permission_denied.html')
+        
+        form = EditPlanForm(instance=plan, site=site)
+        return render(request, self.template_name, {'form': form, 'site': site, 'plan': plan})
+
+    def post(self, request, plan_id):
+        plan = get_object_or_404(Plan, id=plan_id)
+
+        # Check if the user is the owner
+        if not is_institution_owner(request.user):
+            return render(request, 'permission_denied.html')
+
+        site = plan.site
+        # Check if the user is the owner or a staff member responsible for the site
+        if not (is_owner_of_site(request.user, site) or is_staff_responsible_for_site(request.user, site)):
+            return render(request, 'permission_denied.html')
+        
+        form = EditPlanForm(request.POST, site=site, instance=plan)
+
+        if form.is_valid():
+            updated_plan = form.save(commit=False)
+            selected_activity_ids = request.POST.getlist('activities')
+            form.set_activities(selected_activity_ids)
+            updated_plan.site = site
+            form.save()
+            return redirect('plan_list')
+
+        return render(request, self.template_name, {'form': form, 'site': site, 'plan': plan})
 
 @login_required(login_url='login')
 @user_passes_test(is_institution_owner, login_url='login')

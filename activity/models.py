@@ -17,7 +17,6 @@ class Activity(models.Model):
         ('Flamenco', 'Flamenco'),
         ('Folklore','Folklore'),
         ('Hip Hop', 'Hip Hop'),
-        ('Irish Dance', 'Irish Dance'),
         ('Jazz', 'Jazz'),
         ('Krumping', 'Krumping'),
         ('Locking', 'Locking'),

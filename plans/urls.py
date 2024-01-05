@@ -1,7 +1,7 @@
 # plans/urls.py
 from django.urls import path
 from .views import (
-    PlanListView, create_plan, edit_plan, 
+    PlanListView, CreatePlanView, EditPlanView, 
     plan_detail, create_plan_pricing, edit_plan_pricing, plan_pricing_detail,
     assign_user_plan, edit_user_plan,
     
@@ -12,8 +12,8 @@ from .views import (
 
 urlpatterns = [
     path('plan_list/', PlanListView.as_view(), name='plan_list'),
-    path('create_plan/<int:site_id>/', create_plan, name='create_plan'),
-    path('edit_plan/<int:plan_id>/', edit_plan, name='edit_plan'),
+    path('create_plan/<int:site_id>/', CreatePlanView.as_view(), name='create_plan'),
+    path('edit_plan/<int:plan_id>/', EditPlanView.as_view(), name='edit_plan'),
     path('plan_detail/<int:plan_id>/', plan_detail, name='plan_detail'),
     path('plan/<int:plan_id>/create_pricing/', create_plan_pricing, name='create_plan_pricing'),
     # path('plan/<int:plan_id>/edit_pricing/<int:pricing_id>/', edit_plan_pricing, name='edit_plan_pricing'),
