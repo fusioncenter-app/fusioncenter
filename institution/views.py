@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 
 
 from .models import Institution, Site, Space, Staff, Instructor
-from .forms import SiteForm, SpaceForm, StaffForm, InstructorForm
+from .forms import SiteForm, SpaceForm, StaffForm,EditStaffForm, InstructorForm
 from custom_user.models import User
 from .utils.permissions_utils import is_institution_owner, is_institution_instructor, is_institution_staff, is_owner_of_site, is_staff_responsible_for_site, is_owner_of_space, is_staff_responsible_for_space
 from django.contrib import messages
@@ -192,7 +192,7 @@ class StaffListView(View):
     @classmethod
     def as_view(cls, **kwargs):
         view = super().as_view(**kwargs)
-        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')(view))
+        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_owner(u), login_url='login')(view))
 
     def get(self, request, *args, **kwargs):
         # Get the logged-in user
@@ -209,39 +209,83 @@ class StaffListView(View):
 
         return render(request, self.template_name, context)
 
-@login_required
-def create_staff(request):
-    template_name = 'your_template_name.html'  # Set your template name
 
-    if request.method == 'POST':
+class CreateStaffView(View):
+
+    template_name = 'institution/staff/create_staff.html'
+
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_owner(u), login_url='login')(view))
+
+    def get(self, request, *args, **kwargs):
+        form = StaffForm(owner=request.user)
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request, *args, **kwargs):
         form = StaffForm(request.POST, owner=request.user)
 
         if form.is_valid():
+            try:
+                # Get the user with the provided email or return a 404 if not found
+                user = User.objects.get(email=form.cleaned_data['email'])
+            except User.DoesNotExist:
+                form.add_error('email', f"No user found with this email")
+                return render(request, self.template_name, {'form': form})
+
+            # Set the user and institution fields of the staff instance
             staff_instance = form.save(commit=False)
-            staff_instance.institution = request.user.institution  # Access the institution directly from the user
+            staff_instance.user = user
+            staff_instance.institution = request.user.owned_institution
             staff_instance.save()
-            return redirect('success_url')  # Redirect to a success page
-    else:
-        form = StaffForm(owner=request.user)
 
-    
+            # Associate selected responsible sites with the staff instance
+            staff_instance.responsible_sites.set(form.cleaned_data['responsible_sites'])
 
-    return render(request, 'institution/create_staff.html', {'form': form})
+            return redirect('staff_list')  # Redirect to a success page
 
+        return render(request, self.template_name, {'form': form})
+
+class EditStaffView(View):
+
+    template_name = 'institution/staff/edit_staff.html'
+
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_owner(u), login_url='login')(view))
+
+    def get(self, request, staff_id, *args, **kwargs):
+        
+        staff = get_object_or_404(Staff, id=staff_id)
+        form = EditStaffForm(instance=staff,owner=request.user)
+        return render(request, self.template_name, {'form': form, 'staff': staff})
+
+    def post(self, request, staff_id, *args, **kwargs):
+
+        staff = get_object_or_404(Staff, id=staff_id)
+        form = EditStaffForm(request.POST, instance=staff, owner=request.user)
+
+        if form.is_valid():
+            form.save()
+            return redirect('staff_list')
+
+        return render(request, self.template_name, {'form': form, 'staff': staff})
 
 @login_required(login_url='login')
 def edit_staff(request, staff_id):
     staff = get_object_or_404(Staff, id=staff_id)
 
     if request.method == 'POST':
-        form = StaffForm(request.POST, instance=staff)
+        form = EditStaffForm(request.POST, instance=staff)
         if form.is_valid():
             form.save()
             return redirect('staff_list')
     else:
-        form = StaffForm(instance=staff)
+        form = EditStaffForm(instance=staff)
 
-    return render(request, 'institution/edit_staff.html', {'form': form, 'staff': staff})
+    return render(request, 'institution/staff/edit_staff.html', {'form': form, 'staff': staff})
 
 @login_required(login_url='login')
 def delete_staff(request, staff_id):

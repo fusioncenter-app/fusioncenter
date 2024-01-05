@@ -98,6 +98,7 @@
                   {% endif  %}
                   ">Institution</a>
                 </li>
+                {% if group.name == 'InstitutionOwner' %}
                 <li>
                   <a href="{% url 'staff_list' %}" class="block px-4 py-2 hover:bg-gray-600 text-gray-200 hover:text-white 
                   {% if request.resolver_match.url_name == 'staff_list' or request.resolver_match.url_name == 'staff_create' or request.resolver_match.url_name == 'staff_delete' or request.resolver_match.url_name == 'staff_edit' %}
@@ -105,6 +106,7 @@
                   {% endif  %}
                   ">Staff</a>
                 </li>
+                {% endif %}
                 <li>
                   <a href="{% url 'instructor_list' %}" class="block px-4 py-2 hover:bg-gray-600 text-gray-200 hover:text-white 
                   {% if request.resolver_match.url_name == 'instructor_list' %}

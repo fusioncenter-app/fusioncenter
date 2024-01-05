@@ -3,7 +3,7 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth.models import Group
-from .models import User, Institution, Instructor
+from .models import User, Institution, Instructor, Staff
 
 @receiver(post_save, sender=Institution)
 def assign_institution_owner_group(sender, instance, created, **kwargs):
@@ -31,3 +31,12 @@ def assign_instructor_group(sender, instance, created, **kwargs):
 
         # Add the user to the group
         instance.user.groups.add(instructor_group)
+
+@receiver(post_save, sender=Staff)
+def assign_institution_staff_group(sender, instance, created, **kwargs):
+    if created:
+        # Get or create the 'InstitutionStaff' group
+        staff_group, created = Group.objects.get_or_create(name='InstitutionStaff')
+
+        # Add the user to the group
+        instance.user.groups.add(staff_group)

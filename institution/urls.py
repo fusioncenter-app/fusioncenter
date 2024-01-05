@@ -11,8 +11,8 @@ from .views import (
 
 
     StaffListView,
-    create_staff,
-    edit_staff,
+    CreateStaffView,
+    EditStaffView,
     delete_staff
 )
 
@@ -31,9 +31,9 @@ urlpatterns = [
 
     # Staff URLs
     path('staff/list/', StaffListView.as_view(), name='staff_list'),
-    path('create_staff/', create_staff, name='create_staff'),
-    path('edit_staff/<int:staff_id>/', edit_staff, name='edit_staff'),
-    path('delete_staff/<int:staff_id>/', delete_staff, name='delete_staff'),
+    path('staff/create/', CreateStaffView.as_view(), name='create_staff'),
+    path('staff/edit/<int:staff_id>/', EditStaffView.as_view(), name='edit_staff'),
+    path('staff/delete/<int:staff_id>/', delete_staff, name='delete_staff'),
 
     # Instructor URLs
     path('instructor_list/', InstructorListView.as_view(), name='instructor_list'),

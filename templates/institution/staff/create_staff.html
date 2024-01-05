@@ -2,5 +2,64 @@
 
 {% block content %}
 
+<div class="container mx-auto pt-4 pl-6 pr-6 pb-6 bg-gray-900 text-center">
+    <h3 class="text-2xl mx-auto mb-2 font-bold text-white">Add a New Instructor</h3>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
 
+        <div class="grid mx-auto grid-cols-1 gap-4 mb-4 md:w-1/2">
+            <div>
+                <label for="{{ form.email.id_for_label }}" class="text-left block mb-2 text-sm font-medium text-gray-900 text-white">Email</label>
+                <input
+                autofocus
+                    type="email"
+                    name="{{ form.email.name }}"
+                    maxlength="255"
+                    id="{{ form.user.auto_id }}"
+                    value="{% if form.email.value != None %}{{ form.email.value }}{% endif %}"
+                    class="w-full px-3 py-2 text-sm text-white bg-gray-700
+                    {% if form.email.errors %}
+                    border-red-500
+                    {% else %}
+                    border-gray-600
+                    {% endif %} rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:ring-offset-gray-900 border-gray-600 placeholder-gray-400"
+                >
+                {% if form.email.errors %}
+                <div class="mt-2 text-sm text-left text-red-500">{{ form.email.errors }}</div>
+                {% endif %}
+            </div>
+            <div>
+                <label for="{{ form.activities.id_for_label }}" class="text-left block mb-2 text-sm font-medium text-gray-900 text-white">Permission Sites</label>
+                {% for site in form.responsible_sites.field.queryset %}
+                    <div class="flex items-center mb-2">
+                        <input
+                            type="checkbox"
+                            name="responsible_sites"
+                            value="{{ site.id }}" 
+                            id="id_responsible_sites_{{ forloop.counter0 }}"
+                            class="appearance-none w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-600 ring-offset-gray-800 focus:ring-2  mr-2"
+                            {% if site.id in form.responsible_sites.value %}
+                                checked
+                            {% endif %}
+                        >
+                        <label for="id_responsible_sites_{{ forloop.counter0 }}" class="text-sm font-medium text-gray-300">{{ site.name }}</label>
+                    </div>  
+                {% endfor %}
+                <div class="mt-2 text-left text-sm text-red-500">
+                    {% if form.responsible_sites.errors %}
+                        {{ form.responsible_sites.errors }}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div id="action_buttons" class="text-center mx-auto mt-8 md:w-1/2 flex justify-center space-x-4">
+            <a href="{% url 'staff_list' %}" class="flex-1 px-4 py-2 text-red-500 hover:text-red-700 text-sm font-medium border border-red-500 rounded-lg text-center sm:w-auto">Cancel</a>
+            <button type="submit" class="flex-1 px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-800 font-medium rounded-lg text-sm sm:w-auto">Save</button>
+        </div>
+        
+    </form>
+</div>
 {% endblock %}
+
+
