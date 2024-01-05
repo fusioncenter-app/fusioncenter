@@ -2,7 +2,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from .models import Plan, PlanPricing, UserPlan
-from institution.models import Institution, Site
+from institution.models import Institution, Site, Staff
 from activity.models import Session, Participants
 from .forms import CreatePlanForm, EditPlanForm, CreateUnlimitedPlanPricingForm, CreateLimitedPlanPricingForm, EditLimitedPlanPricingForm, EditUnlimitedPlanPricingForm, AssignUserPlanForm, EditUserPlanForm
 from django.http import Http404
@@ -16,8 +16,58 @@ from django.db.models import F,Count,Q
 from django.template.loader import render_to_string
 from django.http import HttpResponse
 
-def is_institution_owner(user):
-    return user.groups.filter(name='InstitutionOwner').exists()
+from .utils.permissions_utils import (
+    is_institution_owner, 
+    is_institution_instructor, 
+    is_institution_staff, 
+    is_owner_of_site, 
+    is_staff_responsible_for_site, 
+    is_activity_of_owner_sites, 
+    is_activity_of_staff_sites,
+    is_session_of_owner_sites,
+    is_session_of_staff_sites,
+    is_owner_of_space,
+    is_staff_responsible_for_space,
+    is_instructor_of_session,
+)
+
+from django.views import View
+
+class PlanListView(View):
+    template_name = 'plan/plan_list.html'
+
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')(view))
+
+    def get(self, request, *args, **kwargs):
+        plans_by_site = {}
+
+        if is_institution_owner(request.user):
+            # Get the institution owned by the current user
+            institution = Institution.objects.get(owner=request.user)
+
+            # Get the sites related to the institution
+            sites = institution.sites.all().order_by('name')
+
+            # Retrieve the plans associated with those sites and order them by site and plan name
+            for site in sites:
+                plans_by_site[site] = Plan.objects.filter(site=site).order_by('name')
+        elif is_institution_staff(request.user):
+            # For staff, list plans based on responsible sites
+            staff_profile = Staff.objects.get(user=request.user)
+            responsible_sites = staff_profile.responsible_sites.all()
+            
+            for site in responsible_sites:
+                plans_by_site[site] = Plan.objects.filter(site=site).order_by('name')
+
+        context = {
+            'plans_by_site': plans_by_site,
+        }
+
+        # Render the plans in a template
+        return render(request, self.template_name, context)
 
 @login_required(login_url='login')
 @user_passes_test(is_institution_owner, login_url='login')

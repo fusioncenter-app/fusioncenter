@@ -37,8 +37,11 @@ from .utils.permissions_utils import (
     is_session_of_owner_sites,
     is_session_of_staff_sites,
     is_owner_of_space,
-    is_staff_responsible_for_space
+    is_staff_responsible_for_space,
+    is_instructor_of_session,
 )
+
+
 
 #Activity List
 class ActivityListView(View):
@@ -507,14 +510,14 @@ class SessionParticipantsView(View):
     @classmethod
     def as_view(cls, **kwargs):
         view = super().as_view(**kwargs)
-        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')(view))
+        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u) or is_institution_instructor(u), login_url='login')(view))
 
     def get(self, request, *args, **kwargs):
         # Get the session or return a 404 response if not found
         session = get_object_or_404(Session, id=self.kwargs['session_id'])
 
         # Check if the user is the owner or a staff member responsible for the session
-        if not (is_session_of_owner_sites(request.user, session) or is_session_of_staff_sites(request.user, session)):
+        if not (is_session_of_owner_sites(request.user, session) or is_session_of_staff_sites(request.user, session) or is_instructor_of_session(request.user, session)):
             return render(request, 'permission_denied.html')
 
         today = date.today()
@@ -539,67 +542,47 @@ class SessionParticipantsView(View):
         # Render the template with the participants and availability for the session
         return render(request, self.template_name, context)
 
-@login_required(login_url='login')
-@user_passes_test(lambda u: is_institution_owner(u) or is_institution_instructor(u), login_url='login')
-def session_participants(request, session_id):
-    # Get the session or return a 404 response if not found
-    session = get_object_or_404(Session, id=session_id)
+class UpdateAttendanceView(View):
 
-    today = date.today()
+    template_name = 'activity/htmx/update_assistance.html'
 
-    # Get the participants for the specified session
-    participants = Participants.objects.filter(session=session).order_by('user__last_name')
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u) or is_institution_instructor(u), login_url='login')(view))
 
-    # Calculate the availability for the session
-    registered_count = participants.filter(assistance_status='registered').count()
-    present_count = participants.filter(assistance_status='present').count()
-    absent_count = participants.filter(assistance_status='absent').count()
-    total_participants = registered_count + present_count + absent_count
-    availability = session.session_capacity - total_participants
+    def get(self, request, *args, **kwargs):
+        # Retrieve the participant object
+        participant = get_object_or_404(Participants, id=self.kwargs['participant_id'])
+        session = participant.session
+        # Check if the user is the owner or a staff member responsible for the session
+        if not (is_session_of_owner_sites(request.user, session) or is_session_of_staff_sites(request.user, session) or is_instructor_of_session(request.user, session)):
+            return render(request, 'permission_denied.html')
 
-    context = {
-        'session': session,
-        'participants': participants,
-        'today': today,
-        'availability': availability,
-    }
+        # Toggle the attendance status
+        if participant.assistance_status != 'cancelled':
+            if participant.assistance_status == 'present':
+                participant.assistance_status = 'absent'
+            elif participant.assistance_status == 'absent':
+                participant.assistance_status = 'registered'
+            elif participant.assistance_status == 'registered':
+                participant.assistance_status = 'present'
 
-    # Render the template with the participants and availability for the session
-    return render(request, 'activity/session_participants.html', context)
+        # Update assistance_datetime and assistance_editor
+        participant.assistance_datetime = timezone.now()
+        participant.assistance_editor = self.request.user
 
+        participant.save()
 
+        # Render the updated inner HTML based on the new status
+        updated_inner_html = render_to_string(self.template_name, {'participant': participant}, request=request)
 
-@login_required(login_url='login')
-@user_passes_test(lambda u: is_institution_owner(u) or is_institution_instructor(u), login_url='login')
-def update_attendance(request, participant_id):
-    # Retrieve the participant object
-    participant = get_object_or_404(Participants, id=participant_id)
-
-    # Toggle the attendance status
-    if participant.assistance_status != 'cancelled':
-        if participant.assistance_status == 'present':
-            participant.assistance_status = 'absent'
-        elif participant.assistance_status == 'absent':
-            participant.assistance_status = 'registered'
-        elif participant.assistance_status == 'registered':
-            participant.assistance_status = 'present'
-
-
-    # Update assistance_datetime and assistance_editor
-    
-    participant.assistance_datetime = timezone.now()
-    participant.assistance_editor = request.user
-
-    participant.save()
-
-    # Render the updated inner HTML based on the new status
-    updated_inner_html = render_to_string('activity/htmx/update_assistance.html', {'participant': participant}, request=request)
-
-    # Return the updated HTML as JSON response
-    return HttpResponse(updated_inner_html)
+        # Return the updated HTML as JSON response
+        return HttpResponse(updated_inner_html)
 
 
 @login_required(login_url='login')
+@user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u) or is_institution_instructor(u), login_url='login')
 def user_session_registration(request, session_id, user_plan_id):
 
 
@@ -708,6 +691,7 @@ def user_session_registration(request, session_id, user_plan_id):
     return redirect(reverse('participant_plan_pricing_sessions', kwargs={'user_plan_id':user_plan_id}))
 
 @login_required(login_url='login')
+@user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u) or is_institution_instructor(u), login_url='login')
 def user_session_cancellation(request, session_id, user_plan_id):
 
     original_user_plan = user_plan_id
@@ -789,42 +773,65 @@ def user_session_cancellation(request, session_id, user_plan_id):
     # Redirect to 'plan_pricing_sessions' with plan_pricing_id parameter
     return redirect(reverse('participant_plan_pricing_sessions', kwargs={'user_plan_id':user_plan_id}))
 
-@login_required(login_url='login')
-@user_passes_test(lambda u: is_institution_owner(u), login_url='login')
-def participant_registration(request, session_id):
-    session = get_object_or_404(Session, pk=session_id)
-    referring_url = request.META.get('HTTP_REFERER', None)
-    # print(referring_url)
+class ParticipantRegistrationView(View):
+    template_name = 'activity/session/participant_registration.html'
 
-    # Count registered, absent, and present participants for the session
-    registered_count = Participants.objects.filter(session=session, assistance_status='registered').count()
-    absent_count = Participants.objects.filter(session=session, assistance_status='absent').count()
-    present_count = Participants.objects.filter(session=session, assistance_status='present').count()
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u), login_url='login')(view))
 
-    total_participants = registered_count + absent_count + present_count
-    # Check if the session is already full
-    if total_participants >= session.session_capacity:
-        messages.warning(request, 'Sorry, the session is already full. You cannot register.')
-        return redirect(request.POST.get('referring_url'))
+    def get(self, request, *args, **kwargs):
+        session = get_object_or_404(Session, pk=self.kwargs['session_id'])
 
-    if request.method == 'POST':
-        form = ParticipantRegistrationForm(session_id, request.POST)
+        # Check if the user is the owner or a staff member responsible for the session
+        if not (is_session_of_owner_sites(request.user, session) or is_session_of_staff_sites(request.user, session) or is_instructor_of_session(request.user, session)):
+            return render(request, 'permission_denied.html')
+        
+        referring_url = request.META.get('HTTP_REFERER', None)
+
+        # Count registered, absent, and present participants for the session
+        registered_count = Participants.objects.filter(session=session, assistance_status='registered').count()
+        absent_count = Participants.objects.filter(session=session, assistance_status='absent').count()
+        present_count = Participants.objects.filter(session=session, assistance_status='present').count()
+
+        total_participants = registered_count + absent_count + present_count
+
+        # Check if the session is already full
+        if total_participants >= session.session_capacity:
+            messages.warning(request, 'Sorry, the session is already full. You cannot register.')
+            return redirect(referring_url)
+
+        form = ParticipantRegistrationForm(session_id=session.id)
+
+        context = {
+            'form': form,
+            'session': session,
+            'referring_url': referring_url,
+        }
+
+        return render(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        session = get_object_or_404(Session, pk=self.kwargs['session_id'])
+
+        # Check if the user is the owner or a staff member responsible for the session
+        if not (is_session_of_owner_sites(request.user, session) or is_session_of_staff_sites(request.user, session) or is_instructor_of_session(request.user, session)):
+            return render(request, 'permission_denied.html')
+
+        form = ParticipantRegistrationForm(session_id=session.id, data=request.POST)
+
         if form.is_valid():
-            
             participant = form.save()
             messages.success(request, 'User registered successfully.')
-            # Redirect to the referring URL if it exists, otherwise to a default URL
             return redirect(request.POST.get('referring_url'))
-    else:
-        form = ParticipantRegistrationForm(session_id)
 
-    context = {
-        'form': form,
-        'session': session,
-        'referring_url': referring_url,
-    }
+        context = {
+            'form': form,
+            'session': session,
+        }
 
-    return render(request, 'activity/participant_registration.html', context)
+        return render(request, self.template_name, context)
 
 
 ###
@@ -832,60 +839,68 @@ def participant_registration(request, session_id):
 ### Instructor Views
 
 ###
+    
+class InstructorActivityListView(View):
+    template_name = 'instructor/instructor_activity_list.html'
 
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_instructor(u), login_url='login')(view))
 
+    def get(self, request, *args, **kwargs):
 
-@login_required(login_url='login')
-@user_passes_test(is_institution_instructor, login_url='login')
-def instructor_activity_list(request, user_id):
-    # Check if the logged-in user matches the specified user_id
-    if request.user.id != int(user_id):
-        return HttpResponseForbidden("You don't have permission to view this page.")
+        # Get the instructor associated with the user
+        instructor = get_object_or_404(Instructor, user=request.user)
 
-    # Get the instructor associated with the user
-    instructor = get_object_or_404(Instructor, user=request.user)
+        # Get the activities for the specified instructor organized by site
+        activities_by_site = {}
+        for activity in Activity.objects.filter(instructor=instructor):
+            site = activity.site
+            if site not in activities_by_site:
+                activities_by_site[site] = []
+            activities_by_site[site].append(activity)
 
-    # Get the activities for the specified instructor organized by site
-    activities_by_site = {}
-    for activity in Activity.objects.filter(instructor=instructor):
-        site = activity.site
-        if site not in activities_by_site:
-            activities_by_site[site] = []
-        activities_by_site[site].append(activity)
+        # Render the template with the organized activities
+        return render(request, self.template_name, {'activities_by_site': activities_by_site})
 
-    # Render the template with the organized activities
-    return render(request, 'instructor/instructor_activity_list.html', {'activities_by_site': activities_by_site})
+class InstructorActivityDetailView(View):
+    template_name = 'instructor/instructor_activity_detail.html'
 
-@login_required(login_url='login')
-@user_passes_test(is_institution_instructor, login_url='login')
-def instructor_activity_detail(request, activity_id):
-    activity = get_object_or_404(Activity, id=activity_id)
-    sessions = activity.sessions.all().order_by('date', 'from_time')  # Use all() to get all related sessions
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(user_passes_test(lambda u: is_institution_instructor(u), login_url='login')(view))
 
-    for session in sessions:
-        # Calculate counts for different assistance_status
-        session.registered_count = Participants.objects.filter(session=session, assistance_status='registered').count()
-        session.present_count = Participants.objects.filter(session=session, assistance_status='present').count()
-        session.absent_count = Participants.objects.filter(session=session, assistance_status='absent').count()
+    def get(self, request, *args, **kwargs):
+        activity = get_object_or_404(Activity, id=self.kwargs['activity_id'])
 
-        # Calculate total_participants and availability
-        session.total_participants = session.registered_count + session.present_count + session.absent_count
-        session.availability = session.session_capacity - session.total_participants
+        # Check if the logged-in user is the instructor of the activity
+        if request.user != activity.instructor.user:
+            # If not, you can handle unauthorized access here, for example, redirect to a different page or return a custom response
+            return render(request, 'permission_denied.html')
+        
+        sessions = activity.sessions.all().order_by('date', 'from_time')  # Use all() to get all related sessions
 
-        # Calculate all_participants_present using Case expression
-        if session.registered_count > 0:
-            session.all_participants_present = False
-        elif session.total_participants == 0:
-            session.all_participants_present = None
-        else:
-            session.all_participants_present = True
+        for session in sessions:
+            # Calculate counts for different assistance_status
+            session.registered_count = Participants.objects.filter(session=session, assistance_status='registered').count()
+            session.present_count = Participants.objects.filter(session=session, assistance_status='present').count()
+            session.absent_count = Participants.objects.filter(session=session, assistance_status='absent').count()
 
-    # Check if the logged-in user is the instructor of the activity
-    if request.user != activity.instructor.user:
-        # If not, you can handle unauthorized access here, for example, redirect to a different page or return a custom response
-        return HttpResponseForbidden("You don't have permission to see this activity information.")
+            # Calculate total_participants and availability
+            session.total_participants = session.registered_count + session.present_count + session.absent_count
+            session.availability = session.session_capacity - session.total_participants
 
-    # Render the template with the activity details
-    return render(request, 'instructor/instructor_activity_detail.html', {'activity': activity, 'sessions': sessions, 'today': date.today()})
+            # Calculate all_participants_present using Case expression
+            if session.registered_count > 0:
+                session.all_participants_present = False
+            elif session.total_participants == 0:
+                session.all_participants_present = None
+            else:
+                session.all_participants_present = True
 
+        
 
+        # Render the template with the activity details
+        return render(request, self.template_name, {'activity': activity, 'sessions': sessions, 'today': date.today()})

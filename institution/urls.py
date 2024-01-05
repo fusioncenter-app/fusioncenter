@@ -13,7 +13,7 @@ from .views import (
 
 urlpatterns = [
     #Institution Urls
-    path('intitution/detail/', InstitutionDetailView.as_view(), name='institution_detail'),
+    path('institution/detail/', InstitutionDetailView.as_view(), name='institution_detail'),
 
     #Site Urls
     path('site/create_site/', CreateSiteView.as_view(), name='create_site'),

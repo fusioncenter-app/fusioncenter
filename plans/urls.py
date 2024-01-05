@@ -1,7 +1,7 @@
 # plans/urls.py
 from django.urls import path
 from .views import (
-    plan_list, create_plan, edit_plan, 
+    PlanListView, create_plan, edit_plan, 
     plan_detail, create_plan_pricing, edit_plan_pricing, plan_pricing_detail,
     assign_user_plan, edit_user_plan,
     
@@ -11,7 +11,7 @@ from .views import (
 )
 
 urlpatterns = [
-    path('plan_list/', plan_list, name='plan_list'),
+    path('plan_list/', PlanListView.as_view(), name='plan_list'),
     path('create_plan/<int:site_id>/', create_plan, name='create_plan'),
     path('edit_plan/<int:plan_id>/', edit_plan, name='edit_plan'),
     path('plan_detail/<int:plan_id>/', plan_detail, name='plan_detail'),

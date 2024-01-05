@@ -137,7 +137,7 @@
     // Store the referrer URL in session storage when the page loads
     document.addEventListener("DOMContentLoaded", function() {
         var referrer = document.referrer;
-        if (referrer.includes('space_calendar/') || referrer.includes('activity_detail/') || referrer.includes('pricing_session_list/')) {
+        if (referrer.includes('calendar/') || referrer.includes('activity/detail/') || referrer.includes('pricing_session_list/')) {
             sessionStorage.setItem('lastVisitedUrlFromSessionParticipants', referrer);
         }
     });

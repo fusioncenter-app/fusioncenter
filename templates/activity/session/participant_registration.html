@@ -76,7 +76,7 @@
                 {% endif %}
             </div>
 
-            <input type="hidden" name="referring_url" value="{{ referring_url }}">
+            <input type="hidden" name="referring_url" value="{% if referring_url %}{{ referring_url }} {% else %} {{form.cleaned_data.referring_url}} {% endif %}">
         </div>
 
         

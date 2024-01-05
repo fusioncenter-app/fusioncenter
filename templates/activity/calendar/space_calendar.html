@@ -119,14 +119,14 @@
     // Store the referrer URL in session storage when the page loads
     document.addEventListener("DOMContentLoaded", function() {
         var referrer = document.referrer;
-        if (referrer.includes('institution_detail/') || referrer.includes('activity_detail/') || referrer.includes('session_list/') || referrer.includes('activity_list/')) {
-            sessionStorage.setItem('lastVisitedUrl', referrer);
+        if (referrer.includes('institution/detail/') || referrer.includes('activity/detail/') || referrer.includes('session/list/') || referrer.includes('activity/list/')) {
+            sessionStorage.setItem('calendarLastUrl', referrer);
         }
     });
 
     function goBackOrRedirect() {
         // Get the stored referrer information from session storage
-        var storedReferrer = sessionStorage.getItem('lastVisitedUrl');
+        var storedReferrer = sessionStorage.getItem('calendarLastUrl');
 
         if (storedReferrer) {
             // Redirect to the stored referrer
