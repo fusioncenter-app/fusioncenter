@@ -1,22 +1,20 @@
+from django.contrib.auth import update_session_auth_hash
 from django.contrib.sites.shortcuts import get_current_site
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.template.loader import render_to_string
-from django.core.mail import EmailMultiAlternatives
+from django.core.mail import EmailMultiAlternatives, send_mail
 from django.contrib.auth.tokens import default_token_generator
 from django.urls import reverse
 from django.shortcuts import render, redirect
-from .forms import CustomUserCreationForm, ProfileForm
-from .models import User
-from django.utils.html import strip_tags
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
-from .models import Profile
-from django.contrib import messages
 from django.views import View
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth import authenticate, login, logout
+from django.contrib import messages
+from .forms import CustomUserCreationForm, ProfileForm
+from .models import User, Profile
 
-from django.core.mail import send_mail
-from django.conf import settings
 
 
 class HomeView(View):
@@ -331,7 +329,7 @@ class ProfileEditView(View):
             return render(request, self.template_name, context)
 
 class OwnerSignupView(View):
-    
+
     template_name = 'owner_signup.html'
     success_template_name = 'home.html'
 
@@ -360,3 +358,21 @@ class OwnerSignupView(View):
             messages.error(request, error_message)
 
         return render(request, self.template_name)
+    
+class CustomPasswordChangeView(View):
+    template_name = 'users/password_change.html'
+
+    def get(self, request, *args, **kwargs):
+        form = PasswordChangeForm(request.user)
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request, *args, **kwargs):
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)  # To prevent the user from being logged out
+            messages.success(request, 'Your password has been changed successfully.')
+            return redirect('settings')
+        else:
+            messages.error(request, 'There was an error changing your password. Please try again.')
+            return render(request, self.template_name, {'form': form})

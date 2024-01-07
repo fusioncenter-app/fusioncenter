@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fusion Center</title>
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+    
     <!-- Include Tailwind CSS from the CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -14,7 +16,7 @@
     <!-- Flowbite -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.8.1/flowbite.min.css" rel="stylesheet" />
 
-    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+    
 
     <style>
       input[type="date"]::-webkit-calendar-picker-indicator {
@@ -96,12 +98,13 @@
   {% endfor %}
 {% endif %}
   
-<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=Intl.~locale.en"></script>
-<script>
-  var userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  document.cookie = "user_timezone=" + userTimezone + "; path=/";
-</script>
+  <script>
+    // Get the user's timezone using JavaScript
+    var userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
+    // Set the timezone in a cookie or store it in a JavaScript variable
+    document.cookie = "user_timezone=" + userTimezone + "; path=/";
+</script>
 </head>
 <body >
     
