@@ -17,6 +17,7 @@ urlpatterns = [
 
     path('settings/', SettingsView.as_view(), name='settings'),
     path('password_change/', CustomPasswordChangeView.as_view(), name='password_change'),
+    path('deactivate/', DeactivateAccountView.as_view(), name='deactivate_account'),
 
     path('activate/<str:uidb64>/<str:token>/', ActivateAccountView.as_view(), name='activate_account'),
     path('activate/successful/', ActivationSuccessfulView.as_view(), name='activation_successful'),

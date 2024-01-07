@@ -12,7 +12,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
-from .forms import CustomUserCreationForm, ProfileForm
+from .forms import CustomUserCreationForm, ProfileForm, DeactivateAccountForm
 from .models import User, Profile
 
 
@@ -376,3 +376,30 @@ class CustomPasswordChangeView(View):
         else:
             messages.error(request, 'There was an error changing your password. Please try again.')
             return render(request, self.template_name, {'form': form})
+        
+class DeactivateAccountView(View):
+
+    template_name = 'users/deactivate_account.html'
+
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(view)
+
+    def get(self, request):
+        form = DeactivateAccountForm()
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request):
+        form = DeactivateAccountForm(request.POST)
+
+        if form.is_valid():
+            # Deactivate the account
+            request.user.is_active = False
+            request.user.save()
+
+            # Logout the user after deactivating the account
+            messages.success(request, 'Your account has been deactivated. We are sorry to see you go.')
+            return redirect('logout')  # Redirect to the logout view or any other desired page
+
+        return render(request, self.template_name, {'form': form})

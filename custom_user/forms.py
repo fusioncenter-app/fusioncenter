@@ -44,3 +44,12 @@ class ProfileForm(forms.ModelForm):
         fields = [
                   'phone_number','country','state','city',
                   'address']  # You can specify which fields you want to include here
+        
+class DeactivateAccountForm(forms.Form):
+    confirmation_text = forms.CharField(max_length=20, label='Type "deactivate" to confirm')
+
+    def clean_confirmation_text(self):
+        confirmation_text = self.cleaned_data['confirmation_text']
+        if confirmation_text != 'deactivate':
+            raise forms.ValidationError('Please enter the correct confirmation text to deactivate your account.')
+        return confirmation_text

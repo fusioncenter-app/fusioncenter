@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% include 'users/profile_tabs.html' %}
+
+<div class="container mx-auto pt-20 pl-6 pr-6 pb-6 bg-gray-900">
+    <div class="max-w-md mx-auto bg-gray-800 p-6 rounded-md shadow-md">
+        <h2 class="text-2xl font-semibold text-white mb-4">Deactivate Account</h2>
+        <p class="text-gray-400 mb-6">Are you sure you want to deactivate your account? You can activate it again later.</p>
+
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="mb-4">
+                <label for="{{ form.confirmation_text.id_for_label }}" class="block font-thin text-sm font-medium text-gray-900 mb-2 text-white">
+                    {{ form.confirmation_text.label }}
+                </label>
+                <input
+                
+                    type="text"
+                    name="{{ form.confirmation_text.name }}"
+                    maxlength="20"
+                    id="{{ form.confirmation_text.auto_id }}"
+                    value="{% if form.confirmation_text.value != None %}{{ form.confirmation_text.value }}{% endif %}"
+                    {% if form.confirmation_text.value == None %}autofocus{% endif %}
+                    class="w-full px-3 py-2 text-sm text-white bg-gray-700
+                    {% if form.confirmation_text.errors %}
+                    border-red-500
+                    {% else %}
+                    border-gray-600
+                    {% endif %} rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:ring-offset-gray-900 border-gray-600 placeholder-gray-400"
+                >
+                {% if form.confirmation_text.errors %}
+                    <div class="mt-2 text-sm  text-red-500">{{ form.confirmation_text.errors|join:", " }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mt-6">
+                <button type="submit" class="w-full px-4 py-2 text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-4 focus:ring-red-700 font-medium rounded-lg text-sm">Deactivate Account</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

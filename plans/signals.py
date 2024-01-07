@@ -6,12 +6,13 @@ from django.contrib.auth import get_user_model
 from .models import UserPlan, PlanPricing
 from activity.models import Participants
 from django.db import transaction
+from datetime import date
 
 @receiver(post_save, sender=UserPlan)
 def add_participants(sender, instance, created, **kwargs):
     if created:
-        user = get_user_model().objects.get(pk=instance.user_id)
-        plan_pricing = PlanPricing.objects.get(pk=instance.plan_pricing_id)
+        # user = get_user_model().objects.get(pk=instance.user_id)
+        # plan_pricing = PlanPricing.objects.get(pk=instance.plan_pricing_id)
         # print(f"Created user plan: {instance}")
         # print(f"User: {user}")
         # print(f"Plan Pricing: {plan_pricing}")
@@ -20,7 +21,7 @@ def add_participants(sender, instance, created, **kwargs):
             if instance.plan_pricing.plan.plan_type == 'unlimited':
                 # Get sessions for the current activity within the plan pricing date range
                 sessions = activity.sessions.filter(
-                    date__range=(instance.plan_pricing.from_date, instance.plan_pricing.to_date)
+                    date__range=(date.today(), instance.plan_pricing.to_date)
                 )
                 # print(f"Sessions for activity '{activity.name}' in unlimited plan: {sessions}")
 
