@@ -3,6 +3,7 @@
 from django.urls import path
 from .urls_explore import urlpatterns as explore_urlpatterns
 from .urls_my_sessions import urlpatterns as my_sessions_urlpatterns
+from .urls_sessions import urlpatterns as sessions_urlpatterns
 from .views import (
     ActivityListView, CreateActivityView, EditActivityView,
     ActivityDetailView, IndividualSessionCreateView,
@@ -42,4 +43,4 @@ urlpatterns = [
 
     path('participant_registration/<int:session_id>/', ParticipantRegistrationView.as_view(), name='participant_registration'),
 
-] + explore_urlpatterns + my_sessions_urlpatterns
+] + explore_urlpatterns + my_sessions_urlpatterns + sessions_urlpatterns

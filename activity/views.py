@@ -25,6 +25,7 @@ from .forms import (
 )
 from .views_explore import *
 from .views_my_sessions import *
+from .views_sessions import *
 
 from .utils.permissions_utils import (
     is_institution_owner, 
@@ -582,7 +583,7 @@ class UpdateAttendanceView(View):
 
 
 @login_required(login_url='login')
-@user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u) or is_institution_instructor(u), login_url='login')
+# @user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u) or is_institution_instructor(u), login_url='login')
 def user_session_registration(request, session_id, user_plan_id):
 
 
@@ -691,7 +692,7 @@ def user_session_registration(request, session_id, user_plan_id):
     return redirect(reverse('participant_plan_pricing_sessions', kwargs={'user_plan_id':user_plan_id}))
 
 @login_required(login_url='login')
-@user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u) or is_institution_instructor(u), login_url='login')
+# @user_passes_test(lambda u: is_institution_owner(u) or is_institution_staff(u) or is_institution_instructor(u), login_url='login')
 def user_session_cancellation(request, session_id, user_plan_id):
 
     original_user_plan = user_plan_id
