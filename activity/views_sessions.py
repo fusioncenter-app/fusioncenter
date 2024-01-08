@@ -10,7 +10,7 @@ from itertools import groupby
 from django.views import View
 from django.core.paginator import Paginator
 
-from .form_my_sessions import MySessionsFiltersForm
+from .forms_sessions import SessionsFiltersForm
 
 from urllib.parse import urlencode, urlparse, parse_qs
 
@@ -31,7 +31,7 @@ from .utils.permissions_utils import (
     is_instructor_of_session,
 )
 
-class MySessionsPageView(View):
+class SessionsPageView(View):
 
     @classmethod
     def as_view(cls, **kwargs):
@@ -42,8 +42,8 @@ class MySessionsPageView(View):
 
     def get_template_name(self):
         if self.request.htmx:
-            return 'session/htmx/session_list_elements.html'
-        return 'session/session_list.html'
+            return 'activity/session/htmx/session_list_elements.html'
+        return 'activity/session/session_list.html'
 
     def get(self, request, *args, **kwargs):
         
@@ -68,11 +68,8 @@ class MySessionsPageView(View):
         updated_query = urlencode(parsed_query_params, doseq=True)
         updated_url = f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}?{updated_query}"
 
-        # print("Updated URL:", updated_url)
+        form = SessionsFiltersForm(request.user, 'today', request.GET or None)
 
-        # print("Updated Referring URL:", updated_referring_url)
-
-        form = MySessionsFiltersForm(request.user,'today', request.GET or None )
         # Filter sessions to exclude those that occurred yesterday or before
         today = today_date.today()
 
@@ -80,17 +77,30 @@ class MySessionsPageView(View):
             sites = form.cleaned_data.get('sites')
             disciplines = form.cleaned_data.get('disciplines')
             instructors = form.cleaned_data.get('instructors')
+            spaces = form.cleaned_data.get('spaces')  # Add spaces to the form
 
             # Get sessions where the user is a participant
             participant_sessions = Participants.objects.filter(user=request.user).values_list('session', flat=True)
             sessions = Session.objects.filter(pk__in=participant_sessions, date__gte=today).order_by('date', 'from_time')
 
             if sites:
-                sessions = sessions.filter(activity__site__in=sites)
+                if is_institution_owner(request.user):
+                    # For owner, filter only sites related to their institution
+                    sessions = sessions.filter(activity__site__in=sites.filter(owned_institution=request.user.owned_institution))
+                elif is_institution_staff(request.user):
+                    # For staff, filter only responsible sites related to the staff's profile
+                    sessions = sessions.filter(activity__site__in=sites.filter(responsible_staff=request.user))
             if disciplines:
                 sessions = sessions.filter(activity__type__in=disciplines)
             if instructors:
                 sessions = sessions.filter(activity__instructor__in=instructors)
+            if spaces:
+                if is_institution_owner(request.user):
+                    # For owner, filter only spaces related to their institution
+                    sessions = sessions.filter(space__in=spaces.filter(site__owned_institution=request.user.owned_institution))
+                elif is_institution_staff(request.user):
+                    # For staff, filter only responsible spaces related to the staff's profile
+                    sessions = sessions.filter(space__in=spaces.filter(site__responsible_staff=request.user))
         else:
             # If no filters, get all sessions where the user is a participant and after today
             participant_sessions = Participants.objects.filter(user=request.user).values_list('session', flat=True)
@@ -114,13 +124,13 @@ class MySessionsPageView(View):
         next_page = paginated_sessions.next_page_number() if paginated_sessions.has_next() else None
 
         context = {
-            'title':'Sessions',
+            'title': 'Sessions',
             'grouped_sessions': grouped_sessions,
             'today': today,
             'current_page': current_page,
             'next_page': next_page,
-            'form':form,
-            'updated_url':updated_url,
+            'form': form,
+            'updated_url': updated_url,
         }
 
         return render(request, self.template_name, context)

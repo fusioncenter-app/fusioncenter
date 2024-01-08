@@ -30,7 +30,7 @@
                     {% endif %}
                 </div>
                 <div class="absolute top-2 right-2">
-                    {% if title == 'My Sessions' %}
+                    {% if title == 'Sessions' %}
                     {% if user.is_authenticated %}
                         {% if session.participant == None %}
                                 {% if session.availability > 0 and session.has_available_plan_pricings %}

@@ -627,7 +627,7 @@ class ParticipantPlanPricingSessionsView(View):
             absent_count=Count('participants', filter=Q(participants__assistance_status='absent')),
             total_participants=F('registered_count') + F('present_count') + F('absent_count'),
             availability=F('session_capacity') - F('total_participants')
-        ).order_by('date')
+        ).order_by('date','from_time')
 
         for session in sessions:
             participant = Participants.objects.filter(user=request.user, session=session).first()

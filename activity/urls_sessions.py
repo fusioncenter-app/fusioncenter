@@ -1,9 +1,9 @@
-# urls.py
+# activity/urls_sessions.py
 
 from django.urls import path
 
-urlpatterns = [
-    
-    # path('session/list/', ActivityListView.as_view(), name='session_list'),
+from .views_sessions import SessionsPageView
 
+urlpatterns = [
+    path('owner_session/list/', SessionsPageView.as_view(), name='owner_session_list'),
 ]

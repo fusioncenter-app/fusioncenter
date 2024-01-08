@@ -205,3 +205,17 @@ class PastSessionsPageView(LoginRequiredMixin, View):
         }
 
         return render(request, self.template_name, context)
+    
+def my_session_info(request, session_id,):
+    
+    session = get_object_or_404(Session, id=session_id)
+    session = calculate_session_details(session, request.user)
+    if session.date >= date.today():
+        title = 'My Sessions'
+    else:
+        title = 'Past Sessions'
+    # Render the updated inner HTML based on the new status
+    updated_inner_html = render_to_string('my_sessions/htmx/session_info.html', {'session': session, 'title': title}, request=request)
+    # time.sleep(5)
+    # Return the updated HTML as JSON response
+    return HttpResponse(updated_inner_html)

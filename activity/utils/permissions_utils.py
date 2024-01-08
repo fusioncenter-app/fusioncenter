@@ -1,4 +1,4 @@
-from ..views import Staff
+# activity/utils/permissions_utils.py
 
 def is_institution_owner(user):
     return user.groups.filter(name='InstitutionOwner').exists()
@@ -16,6 +16,7 @@ def is_owner_of_site(user, site):
 def is_staff_responsible_for_site(user, site):
     # Check if the user is a staff member responsible for the given site
     try:
+        from ..views import Staff
         staff_profile = Staff.objects.filter(user=user).first()
         return staff_profile and site in staff_profile.responsible_sites.all()
     except Staff.DoesNotExist:
@@ -31,6 +32,7 @@ def is_activity_of_owner_sites(user, activity):
 def is_activity_of_staff_sites(user, activity):
     # Check if the activity is related to the staff's responsible sites
     if is_institution_staff(user):
+        from ..views import Staff
         try:
             staff_profile = Staff.objects.get(user=user)
             return activity.site in staff_profile.responsible_sites.all()
@@ -48,6 +50,7 @@ def is_session_of_owner_sites(user, session):
 def is_session_of_staff_sites(user, session):
     # Check if the session's activity is related to the staff's responsible sites
     if is_institution_staff(user):
+        from ..views import Staff
         try:
             staff_profile = Staff.objects.get(user=user)
             return session.activity.site in staff_profile.responsible_sites.all()
@@ -67,6 +70,7 @@ def is_owner_of_space(user, space):
 
 def is_staff_responsible_for_space(user, space):
     # Check if the user is a staff member responsible for the given space
+    from ..views import Staff
     try:
         staff_profile = Staff.objects.get(user=user)
         return staff_profile and space.site in staff_profile.responsible_sites.all()
