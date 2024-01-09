@@ -50,7 +50,7 @@ class SessionsFiltersForm(forms.Form):
         self.fields['spaces'].queryset = spaces_within_range
 
         disciplines = sessions_within_range.values_list('activity__type', flat=True).distinct()
-        print(disciplines)
+        # print(disciplines)
 
         self.fields['disciplines'].choices = [(discipline, discipline) for discipline in disciplines]
 

@@ -70,12 +70,12 @@ class ActivityListView(View):
         else:
             # Handle other cases or redirect to an appropriate page
             return render(request, 'permission_denied.html')
-        print(owned_sites)
+        # print(owned_sites)
         # Retrieve the activities associated with those sites and order them by site
         activities_by_site = {}
         for site in owned_sites:
             activities_by_site[site] = Activity.objects.filter(site=site).order_by('type')
-            print(activities_by_site[site])
+            # print(activities_by_site[site])
         context = {
             'activities_by_site': activities_by_site,
         }
