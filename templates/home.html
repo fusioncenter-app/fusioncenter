@@ -35,8 +35,21 @@
         height: 100%;
         object-fit: cover;
         z-index: 0;
+        opacity: 0;
+        transition: opacity 1.5s ease-in-out; /* Add a transition effect */
+    }
+
+    .hero-content {
+        z-index: 1;
     }
 </style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var heroVideo = document.getElementById("hero-video");
+        heroVideo.style.opacity = "1";
+    });
+</script>
 {% endblock %}
 
 
