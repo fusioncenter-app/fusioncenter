@@ -31,6 +31,10 @@ from .utils.permissions_utils import (
     is_instructor_of_session,
 )
 
+from django.template.loader import render_to_string
+from django.http import HttpResponse
+from datetime import date
+
 class SessionsPageView(View):
 
     @classmethod
@@ -262,3 +266,13 @@ class PastSessionsPageView(View):
         }
 
         return render(request, self.template_name, context)
+
+def owner_session_info(request, session_id,):
+    
+    session = get_object_or_404(Session, id=session_id)
+    session = calculate_session_details(session, request.user)
+    # Render the updated inner HTML based on the new status
+    updated_inner_html = render_to_string('activity/session/htmx/session_info.html', {'session': session}, request=request)
+    # time.sleep(5)
+    # Return the updated HTML as JSON response
+    return HttpResponse(updated_inner_html)

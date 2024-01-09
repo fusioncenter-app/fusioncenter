@@ -6,7 +6,7 @@
                 <h4 class="text-lg font-bold text-white mb-2">{{ date|date:"D d M y" }}</h4>
                 {% for session in sessions %}
                 <a id="session_card_{{session.id}}" onclick="openDrawer()" data-drawer-target="readProductDrawer" data-drawer-show="readProductDrawer" aria-controls="readProductDrawer"
-                hx-get="{% url 'my_session_info' session.id %}"
+                hx-get="{% url 'owner_session_info' session.id %}"
                 hx-target="#readProductDrawer"
                 hx-swap="innerHTML">
                 <div class="relative mb-2 flex items-start border rounded-lg shadow flex-row border-gray-700 bg-gray-800 hover:bg-gray-700 flex-1">
