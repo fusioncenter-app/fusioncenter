@@ -20,7 +20,7 @@ def add_participants(sender, instance, created, **kwargs):
         for activity in instance.plan_pricing.plan.activities.all():
             if instance.plan_pricing.plan.plan_type == 'unlimited':
                 # Get sessions for the current activity within the plan pricing date range
-                sessions = activity.sessions.filter(
+                sessions = activity.activity_sessions.filter(
                     date__range=(date.today(), instance.plan_pricing.to_date)
                 )
                 # print(f"Sessions for activity '{activity.name}' in unlimited plan: {sessions}")
