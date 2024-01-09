@@ -45,6 +45,9 @@ class SelfRegistrationForm(forms.ModelForm):
 
         choices = []
 
+        # Track existing plan pricing ids
+        existing_plan_pricing_ids = set()
+
         for user_plan_pricing in existing_user_plan_pricings:
             label = {
                 'type': 'Existing Plans',
@@ -53,15 +56,18 @@ class SelfRegistrationForm(forms.ModelForm):
                 'sessions_left': f'{user_plan_pricing.sessions_left}' if user_plan_pricing.plan_pricing.plan.plan_type == 'limited' else None,
             }
             choices.append((f'userplan-{user_plan_pricing.id}', label))
+            existing_plan_pricing_ids.add(user_plan_pricing.plan_pricing.id)
 
         for plan_pricing in available_plan_pricings:
-            label = {
-                'type': 'New Plans',
-                'value': str(plan_pricing),
-                'price': f'{plan_pricing.price_unit} {plan_pricing.price_quantity}',
-                'quantity': plan_pricing.sessions_quantity,
-            }
-            choices.append((f'planpricing-{plan_pricing.id}', label))
+            # Drop available limited pricing if there is at least 1 existing user plan pricing with that plan pricing
+            if plan_pricing.id not in existing_plan_pricing_ids:
+                label = {
+                    'type': 'New Plans',
+                    'value': str(plan_pricing),
+                    'price': f'{plan_pricing.price_unit} {plan_pricing.price_quantity}',
+                    'quantity': plan_pricing.sessions_quantity,
+                }
+                choices.append((f'planpricing-{plan_pricing.id}', label))
 
         return choices
 
@@ -74,6 +80,7 @@ class SelfRegistrationForm(forms.ModelForm):
             plan_pricing__to_date__gte=session.date,
             plan_pricing__status='active',
             plan_pricing__plan__plan_type='limited',
+            sessions_left__gt=0,
         ).order_by('plan_pricing__plan__plan_type', 'plan_pricing__from_date')
 
         return user_plan_pricings
