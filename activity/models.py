@@ -40,9 +40,9 @@ class Activity(models.Model):
     description = models.CharField(max_length=255)
     type = models.CharField(max_length=20, choices=TYPE_CHOICES, verbose_name='Discipline')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
-    site = models.ForeignKey(Site, on_delete=models.CASCADE, related_name='activities')
+    site = models.ForeignKey(Site, on_delete=models.CASCADE, related_name='activity_sites')
     custom_capacity = models.PositiveIntegerField()
-    instructor = models.ForeignKey(Instructor, on_delete=models.CASCADE, related_name='instructor_activities')
+    instructor = models.ForeignKey(Instructor, on_delete=models.CASCADE, related_name='activity_instructors')
 
     def __str__(self):
         return f"{self.name}"
@@ -66,12 +66,12 @@ class Session(models.Model):
     ]
 
     
-    activity = models.ForeignKey(Activity, on_delete=models.CASCADE, related_name='sessions')
+    activity = models.ForeignKey(Activity, on_delete=models.CASCADE, related_name='activity_sessions')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='confirmed')
     date = models.DateField()
     from_time = models.TimeField()
     to_time = models.TimeField()
-    space = models.ForeignKey(Space, on_delete=models.CASCADE, related_name='sessions')
+    space = models.ForeignKey(Space, on_delete=models.CASCADE, related_name='space_sessions')
     session_capacity = models.PositiveIntegerField()
 
     def __str__(self):

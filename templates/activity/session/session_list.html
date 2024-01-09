@@ -159,7 +159,33 @@
     </div>
     
 </div>
-
+<script>
+    function copyToClipboard(session_id) {
+      // Get the current page's domain
+      var currentDomain = window.location.origin;
+  
+      // Construct the complete URL with the path
+      var linkToCopy = currentDomain + "/explore/self_session_registration/" + session_id;
+  
+      // Create a temporary input element
+      var tempInput = document.createElement("input");
+      tempInput.value = linkToCopy;
+      document.body.appendChild(tempInput);
+  
+      // Select the input text
+      tempInput.select();
+      tempInput.setSelectionRange(0, 99999); /*For mobile devices*/
+  
+      // Copy the text to the clipboard
+      document.execCommand("copy");
+  
+      // Remove the temporary input element
+      document.body.removeChild(tempInput);
+  
+      // You can add additional feedback or actions here
+      alert("Link copied to clipboard: " + linkToCopy);
+    }
+  </script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {

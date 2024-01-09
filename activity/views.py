@@ -70,12 +70,12 @@ class ActivityListView(View):
         else:
             # Handle other cases or redirect to an appropriate page
             return render(request, 'permission_denied.html')
-
+        print(owned_sites)
         # Retrieve the activities associated with those sites and order them by site
         activities_by_site = {}
         for site in owned_sites:
             activities_by_site[site] = Activity.objects.filter(site=site).order_by('type')
-
+            print(activities_by_site[site])
         context = {
             'activities_by_site': activities_by_site,
         }
@@ -169,7 +169,7 @@ class ActivityDetailView(View):
         if not (is_activity_of_owner_sites(request.user, activity) or is_activity_of_staff_sites(request.user, activity)):
             return render(request, 'permission_denied.html')
 
-        sessions = activity.sessions.order_by('date', 'from_time')
+        sessions = activity.activity_sessions.order_by('date', 'from_time')
 
         for session in sessions:
             # Calculate counts for different assistance_status
@@ -327,7 +327,7 @@ def get_sessions_for_week(space, year, week):
     end_date = start_date + timedelta(days=6)
 
     # Query sessions for the specified space and date range
-    sessions = space.sessions.filter(date__range=[start_date, end_date]).order_by('from_time')
+    sessions = space.space_sessions.filter(date__range=[start_date, end_date]).order_by('from_time')
 
     for session in sessions:
         # Calculate counts for different assistance_status

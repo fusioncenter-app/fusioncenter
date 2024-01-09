@@ -5,6 +5,7 @@ from institution.models import Site, Instructor
 from custom_user.models import User
 from plans.models import Plan,PlanPricing,UserPlan
 from django.shortcuts import get_object_or_404
+from datetime import date, timedelta
 
 class FiltersForm(forms.Form):
     sites = forms.ModelMultipleChoiceField(queryset=Site.objects.all(), widget=forms.CheckboxSelectMultiple, required=False)
@@ -19,8 +20,10 @@ class FiltersForm(forms.Form):
         for instructor in self.fields['instructors'].queryset:
             label = instructor.user.get_full_name()
             instructor_choices.append((instructor.pk, label))
-
         self.fields['instructors'].choices = instructor_choices
+
+        disciplines = Session.objects.filter(date__gte=date.today()).values_list('activity__type', flat=True).distinct()
+        self.fields['disciplines'].choices = [(discipline, discipline) for discipline in disciplines]
 
 class SelfRegistrationForm(forms.ModelForm):
     plan_pricing = forms.ChoiceField(label='Plan Pricing', widget=forms.Select())

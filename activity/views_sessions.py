@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404, reverse, get_list_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from .models import Session, Participants
-
+from institution.models import Institution, Site
 from datetime import date as today_date
 
 
@@ -79,32 +79,28 @@ class SessionsPageView(View):
             instructors = form.cleaned_data.get('instructors')
             spaces = form.cleaned_data.get('spaces')  # Add spaces to the form
 
-            # Get sessions where the user is a participant
-            participant_sessions = Participants.objects.filter(user=request.user).values_list('session', flat=True)
-            sessions = Session.objects.filter(pk__in=participant_sessions, date__gte=today).order_by('date', 'from_time')
+            # Additional filter for owner or staff
+            if is_institution_owner(request.user):
+                sessions = Session.objects.filter(activity__site__in=request.user.owned_institution.sites.all(), date__gte=today).order_by('date', 'from_time')
+            elif is_institution_staff(request.user):
+                # If the user is staff, filter by responsible sites
+                sessions = Session.objects.filter(activity__site__in=request.user.staff_profile.responsible_sites.all(), date__gte=today).order_by('date', 'from_time')
 
             if sites:
-                if is_institution_owner(request.user):
-                    # For owner, filter only sites related to their institution
-                    sessions = sessions.filter(activity__site__in=sites.filter(owned_institution=request.user.owned_institution))
-                elif is_institution_staff(request.user):
-                    # For staff, filter only responsible sites related to the staff's profile
-                    sessions = sessions.filter(activity__site__in=sites.filter(responsible_staff=request.user))
+                sessions = sessions.filter(activity__site__in=sites)
             if disciplines:
                 sessions = sessions.filter(activity__type__in=disciplines)
             if instructors:
                 sessions = sessions.filter(activity__instructor__in=instructors)
             if spaces:
-                if is_institution_owner(request.user):
-                    # For owner, filter only spaces related to their institution
-                    sessions = sessions.filter(space__in=spaces.filter(site__owned_institution=request.user.owned_institution))
-                elif is_institution_staff(request.user):
-                    # For staff, filter only responsible spaces related to the staff's profile
-                    sessions = sessions.filter(space__in=spaces.filter(site__responsible_staff=request.user))
+                sessions = sessions.filter(space__in=spaces)
         else:
-            # If no filters, get all sessions where the user is a participant and after today
-            participant_sessions = Participants.objects.filter(user=request.user).values_list('session', flat=True)
-            sessions = Session.objects.filter(pk__in=participant_sessions, date__gte=today).order_by('date', 'from_time')
+            # Additional filter for owner or staff
+            if is_institution_owner(request.user):
+                sessions = Session.objects.filter(activity__site__in=request.user.owned_institution.sites.all(), date__gte=today).order_by('date', 'from_time')
+            elif is_institution_staff(request.user):
+                # If the user is staff, filter by responsible sites
+                sessions = Session.objects.filter(activity__site__in=request.user.staff_profile.responsible_sites.all(), date__gte=today).order_by('date', 'from_time')
 
         # Paginate the sessions first
         page = self.request.GET.get('page', 1)
@@ -118,6 +114,22 @@ class SessionsPageView(View):
 
             for session in grouped_sessions[date]:
                 session = calculate_session_details(session, request.user)
+
+                session.registered_count = Participants.objects.filter(session=session, assistance_status='registered').count()
+                session.present_count = Participants.objects.filter(session=session, assistance_status='present').count()
+                session.absent_count = Participants.objects.filter(session=session, assistance_status='absent').count()
+
+                # Calculate total_participants and availability
+                session.total_participants = session.registered_count + session.present_count + session.absent_count
+                session.availability = session.session_capacity - session.total_participants
+
+                # Calculate all_participants_present using Case expression
+                if session.registered_count > 0:
+                    session.all_participants_present = False
+                elif session.total_participants == 0:
+                    session.all_participants_present = None
+                else:
+                    session.all_participants_present = True
 
         # Add current page and next page to the context
         current_page = paginated_sessions.number

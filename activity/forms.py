@@ -187,7 +187,7 @@ class MultipleSessionCreationForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         # Limit the queryset for the space field based on the activity
-        self.fields['space'].queryset = Space.objects.filter(site__activities__id=activity_id)
+        self.fields['space'].queryset = Space.objects.filter(site__activity_sites__id=activity_id)
         self.activity_id = activity_id
         activity = get_object_or_404(Activity, pk=self.activity_id)
 

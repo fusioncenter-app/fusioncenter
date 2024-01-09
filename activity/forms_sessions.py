@@ -33,46 +33,35 @@ class SessionsFiltersForm(forms.Form):
 
         # Get spaces within the specified range
         if is_institution_owner(user):
-            # print(user.owned_institution.__dict__)
-            # Get the owned institution (assuming user.owned_institution is the institution name)
-            owned_institution = get_object_or_404(Institution, name=user.owned_institution)
-            
-            # Get the sites associated with the institution
-            associated_sites = owned_institution.sites.all()
+            # Get sessions within the specified date range
+            sessions_within_range = Session.objects.filter(date__range=(start_date, end_date),space__site__in=user.owned_institution.sites.all())
 
             # Filter spaces based on the associated sites
-            spaces_within_range = Space.objects.filter(site__in=associated_sites)
+            spaces_within_range = Space.objects.filter(site__in=user.owned_institution.sites.all())
 
         elif is_institution_staff(user):
-            # print(user.__dict__)
+            # Get sessions within the specified date range
+            sessions_within_range = Session.objects.filter(date__range=(start_date, end_date),space__site__in=user.staff_profile.responsible_sites.all())
 
-            # For staff, get responsible sites related to the staff's profile
-            responsible_sites = user.staff_profile.responsible_sites.all()
-            
             # Filter spaces based on the associated sites
-            spaces_within_range = Space.objects.filter(site__in=responsible_sites)
+            spaces_within_range = Space.objects.filter(site__in=user.staff_profile.responsible_sites.all())
 
         # Set the queryset for the 'spaces' field based on the determined spaces_within_range
         self.fields['spaces'].queryset = spaces_within_range
 
-        # Get sessions within the specified date range
-        sessions_within_range = Session.objects.filter(date__range=(start_date, end_date))
+        disciplines = sessions_within_range.values_list('activity__type', flat=True).distinct()
+        print(disciplines)
 
-        # Get participants of sessions within the specified date range
-        participant_sessions = Participants.objects.filter(session__in=sessions_within_range, user=user).distinct()
-
-        # Set the queryset for the 'disciplines' field based on participants of sessions
-        participant_disciplines = participant_sessions.values_list('session__activity__type', flat=True).distinct()
-        self.fields['disciplines'].choices = [(discipline, discipline) for discipline in participant_disciplines]
+        self.fields['disciplines'].choices = [(discipline, discipline) for discipline in disciplines]
 
         # Set the queryset for the 'instructors' field based on participants of sessions
-        participant_instructors = participant_sessions.values_list('session__activity__instructor', flat=True).distinct()
-        instructors = Instructor.objects.filter(id__in=participant_instructors).distinct()
+        session_instructors = sessions_within_range.values_list('activity__instructor', flat=True).distinct()
+        instructors = Instructor.objects.filter(id__in=session_instructors).distinct()
         instructor_choices = [(instructor.pk, instructor.user.get_full_name()) for instructor in instructors]
         self.fields['instructors'].choices = instructor_choices
 
         # Set the queryset for the 'sites' field based on participants of sessions
-        participant_sites = participant_sessions.values_list('session__activity__site', flat=True).distinct()
+        sites = sessions_within_range.values_list('activity__site', flat=True).distinct()
         if is_institution_owner(user):
             # Get the owned institution (assuming user.owned_institution is the institution name)
             owned_institution = get_object_or_404(Institution, name=user.owned_institution)
@@ -85,4 +74,4 @@ class SessionsFiltersForm(forms.Form):
             self.fields['sites'].queryset = associated_sites
         elif is_institution_staff(user):
             # For staff, include responsible sites related to the staff's profile
-            self.fields['sites'].queryset = Site.objects.filter(id__in=participant_sites).distinct()
+            self.fields['sites'].queryset = Site.objects.filter(id__in=sites).distinct()
