@@ -15,9 +15,6 @@
     .hero-section {
         height: calc(100vh - 64px); /* Subtract the navbar height */
         display: flex;
-        background-image: url('{% static 'hero_image.jpeg' %}');
-        background-size: cover; /* Adjust the background size */
-        background-position: center center; /* Center the background image */
         flex-direction: column;
         justify-content: center;
         align-items: center;
@@ -27,6 +24,17 @@
         position: relative;
         top: 0; /* Align with the top of the viewport */
         z-index: 1; /* Ensure the hero section is above other elements */
+        overflow: hidden; /* Hide overflow to prevent unwanted scrollbars */
+    }
+
+    #hero-video {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        z-index: 0;
     }
 </style>
 {% endblock %}
@@ -38,7 +46,11 @@
 {% block content %}
 
 <section class="hero-section">
-    <div class="">
+    <video id="hero-video" autoplay muted loop >
+        <source src="{% static 'home/hero_video.mov' %}" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+    <div class="z-10">
         <h1 class="mb-4 text-5xl font-extrabold tracking-tight leading-none md:text-5xl lg:text-6xl">Connect, Learn, Dance</h1>
         <p class="mb-4 mt-12 text-xl font-normal text-gray-200 lg:text-2xl sm:px-16 xl:px-48">
             Empowering Dancers through Collaboration
@@ -70,20 +82,20 @@
         <div class="space-y-8 lg:grid lg:grid-cols-3 sm:gap-6 xl:gap-10 lg:space-y-0">
             <!-- Pricing Card -->
             
-            <div class="flex flex-col p-6 mx-auto max-w-lg text-center text-white bg-gray-800 rounded-lg border border-gray-600 shadow  xl:p-8 items-center">
-                <img class="object-cover rounded-full h-48 w-48 mb-6" src="{% static 'home/4413403.jpg' %}" alt="Lana Byrd Avatar">
+            <div class="flex flex-col p-6 mx-auto max-w-lg  text-center text-white bg-gray-800 rounded-lg border border-gray-600 shadow  xl:p-8 items-center">
+                <img class="object-cover rounded-full h-64 w-64 mb-6 scale-[1.30]" src="{% static 'home/oarLws9bTNe4qxh8i17cJw.png' %}" alt="Lana Byrd Avatar">
                 <h3 class="mb-4 text-2xl font-semibold">Plan Administration</h3>
                 <p class="font-light  sm:text-lg text-gray-400">Simplify payment, attendance, and plans for your dance. Our platform streamlines administrative tasks.</p>
             </div>
             <!-- Pricing Card -->
             <div class="flex flex-col p-6 mx-auto max-w-lg text-center text-white bg-gray-800 rounded-lg border border-gray-600 shadow  xl:p-8 items-center">
-                <img class="object-cover rounded-full h-48 w-48 mb-6" src="{% static 'home/62242.jpg' %}" alt="Lana Byrd Avatar">
+                <img class="object-cover rounded-full h-64 w-64 mb-6 scale-[1.10]" src="{% static 'home/L5FIaczhTm2gu05CRoHISg.png' %}" alt="Lana Byrd Avatar">
                 <h3 class="mb-4 text-2xl font-semibold">Session Management</h3>
                 <p class="font-light text-gray-400 sm:text-lg ">Take control of your sessions effortlessly. Efficient scheduling for a seamless dance experience.</p>
             </div>
             <!-- Pricing Card -->
             <div class="flex flex-col p-6 mx-auto max-w-lg text-center text-white bg-gray-800 rounded-lg border border-gray-600 shadow xl:p-8 items-center">
-                <img class="object-cover rounded-full h-48 w-48 mb-6" src="{% static 'home/6057235.jpg' %}" alt="Lana Byrd Avatar">
+                <img class="object-cover rounded-full h-64 w-64 mb-6" src="{% static 'home/m0IRmdoxRc2DXapNwXZlYg.png' %}" alt="Lana Byrd Avatar">
                 <h3 class="mb-4 text-2xl font-semibold">Connected Mobility</h3>
 <p class="font-light text-gray-400 sm:text-lg">Extend your dance horizons seamlessly with our platform. Expand your dance connections from anywhere.</p>
 </div>
