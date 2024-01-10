@@ -881,7 +881,7 @@ class InstructorActivityDetailView(View):
             # If not, you can handle unauthorized access here, for example, redirect to a different page or return a custom response
             return render(request, 'permission_denied.html')
         
-        sessions = activity.sessions.all().order_by('date', 'from_time')  # Use all() to get all related sessions
+        sessions = activity.activity_sessions.all().order_by('date', 'from_time')  # Use all() to get all related sessions
 
         for session in sessions:
             # Calculate counts for different assistance_status
