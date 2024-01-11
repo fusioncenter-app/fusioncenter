@@ -75,3 +75,47 @@ class SessionsFiltersForm(forms.Form):
         elif is_institution_staff(user):
             # For staff, include responsible sites related to the staff's profile
             self.fields['sites'].queryset = Site.objects.filter(id__in=sites).distinct()
+
+
+class InstructorSessionsFiltersForm(forms.Form):
+
+    sites = forms.ModelMultipleChoiceField(queryset=Site.objects.all(), widget=forms.CheckboxSelectMultiple, required=False)
+    disciplines = forms.MultipleChoiceField(choices=Activity.TYPE_CHOICES, widget=forms.CheckboxSelectMultiple, required=False)
+    spaces = forms.ModelMultipleChoiceField(queryset=Space.objects.all(), widget=forms.CheckboxSelectMultiple, required=False)
+
+    def __init__(self, user, date_filter='today', *args, **kwargs):
+        super(InstructorSessionsFiltersForm, self).__init__(*args, **kwargs)
+
+        # Determine the date range based on the date_filter parameter
+        from datetime import date, timedelta
+        if date_filter == 'today':
+            start_date = date.today()
+            end_date = date.max
+        elif date_filter == 'yesterday':
+            start_date = date.min
+            end_date = date.today() - timedelta(days=1)
+        else:
+            # Default to today's sessions
+            start_date = date.today()
+            end_date = date.max
+
+        instructor_user = User.objects.get(email=user)
+        # print(instructor_user.__dict__)
+
+        sessions_within_range = Session.objects.filter(date__range=(start_date, end_date),activity__instructor__user=instructor_user)
+        # Filter spaces based on the instructor asociated sites
+        spaces_within_range = Space.objects.filter(space_sessions__in=sessions_within_range).distinct()
+        # Set the queryset for the 'spaces' field based on the determined spaces_within_range
+        self.fields['spaces'].queryset = spaces_within_range
+
+        disciplines = sessions_within_range.values_list('activity__type', flat=True).distinct()
+        # print(disciplines)
+
+        self.fields['disciplines'].choices = [(discipline, discipline) for discipline in disciplines]
+
+        # Set the queryset for the 'sites' field based on participants of sessions
+        sites = sessions_within_range.values_list('activity__site', flat=True).distinct()
+        
+        
+        instructor_sites = Site.objects.filter(spaces__in=spaces_within_range)
+        self.fields['sites'].queryset = instructor_sites
