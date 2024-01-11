@@ -14,6 +14,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from .forms import CustomUserCreationForm, ProfileForm, DeactivateAccountForm
 from .models import User, Profile
+from django.utils.html import strip_tags
 
 
 
