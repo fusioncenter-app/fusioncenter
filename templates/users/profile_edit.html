@@ -33,25 +33,7 @@
                 {% endif %}
             </div>
 
-            <div>
-                <label for="{{ form.country.auto_id }}" class="block mb-2 text-sm font-medium text-gray-900 text-white">{{ form.country.label }}</label>
-                <input
-                    type="text"
-                    name="{{ form.country.name }}"
-                    maxlength="100" 
-                    id="{{ form.country.auto_id }}"
-                    value="{% if form.country.value != None %}{{ form.country.value }}{% endif %}"
-                    class="w-full px-3 py-2 text-sm text-white bg-gray-700
-                    {% if form.country.errors %}
-                    border-red-500
-                    {% else %}
-                    border-gray-600
-                    {% endif %} rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:ring-offset-gray-900 border-gray-600 placeholder-gray-400"
-                >
-                {% if form.country.errors %}
-                <div class="mt-2 text-sm text-red-500">{{ form.country.errors }}</div>
-                {% endif %}
-            </div>
+
             
             <div>
                 <label for="{{ form.state.auto_id }}" class="block mb-2 text-sm font-medium text-gray-900 text-white">{{ form.state.label }}</label>
@@ -92,6 +74,83 @@
                 <div class="mt-2 text-sm text-red-500">{{ form.city.errors }}</div>
                 {% endif %}
             </div>
+            <div hx-get="{% url 'country_list' %}" hx-trigger="load" hx-target="#country_options" hx-swap="outerHTML" hx-indicator="#country_indicator">
+                <label for="{{ form.country.auto_id }}" class="block mb-2 text-sm font-medium text-gray-900
+                {% if form.country.errors %}
+                text-red-500
+                {% else %}
+                text-white
+                {% endif %}">{{ form.country.label }}</label>
+                <select name="{{ form.country.name }}" id="{{ form.country.auto_id }}"
+                        class="w-full px-3 py-2 text-sm text-white bg-gray-700
+                        {% if form.country.errors %}
+                        border-red-500
+                        {% else %}
+                        border-gray-600
+                        {% endif %} rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:ring-offset-gray-900 border-gray-600 placeholder-gray-400">
+                    {% if user_profile.country %}
+                    <option id="country_options" selected value="">{{user_profile.country}}</option>
+                    {% else %}
+                    <option id="country_options" disabled value="">Loading... </option>
+                    {% endif %}
+                    
+                </select>
+                {% if form.country.errors %}
+                <div class="mt-2 text-sm text-red-500">{{ form.country.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div>
+                <label for="{{ form.state.auto_id }}" class="block mb-2 text-sm font-medium text-gray-900
+                {% if form.state.errors %}
+                text-red-500
+                {% else %}
+                text-white
+                {% endif %}">{{ form.state.label }}</label>
+                <select name="{{ form.state.name }}" id="{{ form.state.auto_id }}"
+                        class="w-full px-3 py-2 text-sm text-white bg-gray-700
+                        {% if form.state.errors %}
+                        border-red-500
+                        {% else %}
+                        border-gray-600
+                        {% endif %} rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:ring-offset-gray-900 border-gray-600 placeholder-gray-400">
+                    <option disabled selected value="">Select a state</option>
+                    {% for choice in profile_choices.state_choices %}
+                        <option value="{{ choice.0 }}" {% if choice.0 == form.state.value %}selected{% endif %}>
+                            {{ choice.1 }}
+                        </option>
+                    {% endfor %}
+                </select>
+                {% if form.state.errors %}
+                <div class="mt-2 text-sm text-red-500">{{ form.state.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div>
+                <label for="{{ form.city.auto_id }}" class="block mb-2 text-sm font-medium text-gray-900
+                {% if form.city.errors %}
+                text-red-500
+                {% else %}
+                text-white
+                {% endif %}">{{ form.city.label }}</label>
+                <select name="{{ form.city.name }}" id="{{ form.city.auto_id }}"
+                        class="w-full px-3 py-2 text-sm text-white bg-gray-700
+                        {% if form.city.errors %}
+                        border-red-500
+                        {% else %}
+                        border-gray-600
+                        {% endif %} rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:ring-offset-gray-900 border-gray-600 placeholder-gray-400">
+                    <option disabled selected value="">Select a city</option>
+                    {% for choice in profile_choices.city_choices %}
+                        <option value="{{ choice.0 }}" {% if choice.0 == form.city.value %}selected{% endif %}>
+                            {{ choice.1 }}
+                        </option>
+                    {% endfor %}
+                </select>
+                {% if form.city.errors %}
+                <div class="mt-2 text-sm text-red-500">{{ form.city.errors }}</div>
+                {% endif %}
+            </div>
         </div>
         <div id="action_buttons" class="text-center mx-auto mt-8 md:w-1/2 flex justify-center space-x-4">
             
@@ -105,7 +164,17 @@
 </div>
 
 
-
+<style>
+    .country_indicator{
+        opacity: 0;
+    }
+    .htmx-request .country_indicator{
+        opacity: 100;
+    }
+    .htmx-request.country_indicator{
+        opacity: 100;
+    }
+</style>
 
 
 

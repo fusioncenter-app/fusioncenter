@@ -15,7 +15,8 @@ from django.contrib import messages
 from .forms import CustomUserCreationForm, ProfileForm, DeactivateAccountForm
 from .models import User, Profile
 from django.utils.html import strip_tags
-
+from django.http import HttpResponse
+import requests
 
 
 class HomeView(View):
@@ -404,3 +405,42 @@ class DeactivateAccountView(View):
             return redirect('logout')  # Redirect to the logout view or any other desired page
 
         return render(request, self.template_name, {'form': form})
+    
+
+class CountryListView(View):
+
+    template_name = 'users/htmx/countries.html'
+
+    @classmethod
+    def as_view(cls, **kwargs):
+        view = super().as_view(**kwargs)
+        return login_required(login_url='login')(view)
+
+    def get(self, request, *args, **kwargs):
+        
+        countries = self.get_countries()
+        user_profile = request.user.profile
+
+        context = {'countries': countries, 'user_profile':user_profile,}
+
+        updated_inner_html = render_to_string(self.template_name, context, request=request)
+
+        return HttpResponse(updated_inner_html)
+        
+
+    def get_countries(self):
+        api_url = "https://www.universal-tutorial.com/api/countries/"
+        headers = {
+            "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7InVzZXJfZW1haWwiOiJhc2tAdW5pdmVyc2FsLXR1dG9yaWFsLmNvbSIsImFwaV90b2tlbiI6IlQ2VlBOUmZXbkxFbmdsMHd2djctZ1d2Y09KRHFPSkptc3ZoNkNOdGo5a3p1Z1RSYkhvdXVET1NXeTdzYmJzdG5taDAifSwiZXhwIjoxNzA1MTU2NjcyfQ.Kht4zIe8KwjVa8b6S6IYA3wN6gAg3c_Ak35AzYyNqQw",
+            "Accept": "application/json",
+        }
+
+        response = requests.get(api_url, headers=headers)
+        # print(response)
+        if response.status_code == 200:
+            countries = response.json()
+            # print(countries)
+            return countries
+        else:
+            # Handle the error, for simplicity, raising an exception here
+            raise Exception(f"Failed to fetch countries. Status code: {response.status_code}")

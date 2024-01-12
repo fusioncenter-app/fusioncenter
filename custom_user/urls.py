@@ -15,6 +15,8 @@ urlpatterns = [
     path('profile_view/', ProfileView.as_view(), name='profile_view'),
     path('profile_edit/', ProfileEditView.as_view(), name='profile_edit'),
 
+    path('countries/', CountryListView.as_view(), name='country_list'),
+
     path('settings/', SettingsView.as_view(), name='settings'),
     path('password_change/', CustomPasswordChangeView.as_view(), name='password_change'),
     path('deactivate/', DeactivateAccountView.as_view(), name='deactivate_account'),
