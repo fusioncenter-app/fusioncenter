@@ -1,0 +1,10 @@
+<option disabled selected value="">Select a State
+                    
+</option>
+{% for state in states %}
+    <option value="{{ state.state_name }}" {% if state.state_name == user_profile.state %} selected {% endif %}>
+        {{ state.state_name }}
+    </option>
+{% endfor %}
+
+

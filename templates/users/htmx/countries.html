@@ -1,8 +1,10 @@
-<option id="country_options" disabled selected value="">Select a country
+<option disabled selected value="">Select a country
                     
 </option>
 {% for country in countries %}
-    <option value="{{ country.country_name }}" {% if country.country_name == user_profile.country %} selected {% endif %}>
+    <option 
+        
+        value="{{ country.country_name }}" {% if country.country_name == user_profile.country %} selected {% endif %}>
         {{ country.country_name }}
     </option>
 {% endfor %}
