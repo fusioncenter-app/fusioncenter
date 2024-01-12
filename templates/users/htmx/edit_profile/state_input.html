@@ -1,4 +1,4 @@
-<div id="">
+<div id="state_input">
 
     <div class="inline-flex"
         {% if user_profile.country %}
@@ -7,6 +7,7 @@
         hx-target="#{{ form.state.auto_id }}" 
         hx-swap="innerHTML"
         hx-indicator="#state_indicator"
+        hx-headers='{"myHeader": "false"}'
         {% endif %}>
         <label for="{{ form.state.auto_id }}" class="block mb-2 text-sm font-medium text-gray-900
         {% if form.state.errors %}
@@ -25,6 +26,11 @@
     
     
     <select 
+            hx-get="{% url 'cities_list' '__value__' %}"
+            hx-trigger="change"
+            hx-target="#{{ form.city.auto_id }}"
+            hx-swap="innerHTML"
+            hx-indicator="#city_indicator"
             name="{{ form.state.name }}" id="{{ form.state.auto_id }}"
             class="w-full px-3 py-2 text-sm text-white bg-gray-700
             {% if form.state.errors %}
@@ -33,14 +39,18 @@
             border-gray-600
             {% endif %} rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:ring-offset-gray-900 border-gray-600 placeholder-gray-400">
         <option disabled selected value="">Select a State</option>
-        {% for choice in profile_choices.state_choices %}
-            <option value="{{ choice.0 }}" {% if choice.0 == form.state.value %}selected{% endif %}>
-                {{ choice.1 }}
-            </option>
-        {% endfor %}
+        {% if user_profile.state %}
+        <option 
+        selected value="{{user_profile.state}}">{{user_profile.state}}</option>
+        {% else %}
+        <option  disabled value="">Loading... </option>
+        {% endif %}
     </select>
     {% if form.state.errors %}
     <div class="mt-2 text-sm text-red-500">{{ form.state.errors }}</div>
     {% endif %}
 </div>
+
+
+
 

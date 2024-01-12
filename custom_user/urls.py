@@ -17,6 +17,7 @@ urlpatterns = [
 
     path('countries/', CountryListView.as_view(), name='country_list'),
     path('states/<str:country>', StateListView.as_view(), name='states_list'),
+    path('cities/<str:state>', CityListView.as_view(), name='cities_list'),
 
     path('settings/', SettingsView.as_view(), name='settings'),
     path('password_change/', CustomPasswordChangeView.as_view(), name='password_change'),

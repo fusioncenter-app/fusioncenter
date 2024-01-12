@@ -3,7 +3,6 @@
 </option>
 {% for country in countries %}
     <option 
-        
         value="{{ country.country_name }}" {% if country.country_name == user_profile.country %} selected {% endif %}>
         {{ country.country_name }}
     </option>
