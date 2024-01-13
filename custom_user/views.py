@@ -16,7 +16,7 @@ from .forms import CustomUserCreationForm, ProfileForm, DeactivateAccountForm
 from .models import User, Profile
 from django.utils.html import strip_tags
 from django.http import HttpResponse
-import requests
+# import requests
 
 
 class HomeView(View):
@@ -407,127 +407,127 @@ class DeactivateAccountView(View):
         return render(request, self.template_name, {'form': form})
     
 
-class CountryListView(View):
+# class CountryListView(View):
 
-    template_name = 'users/htmx/countries.html'
+#     template_name = 'users/htmx/countries.html'
 
-    @classmethod
-    def as_view(cls, **kwargs):
-        view = super().as_view(**kwargs)
-        return login_required(login_url='login')(view)
+#     @classmethod
+#     def as_view(cls, **kwargs):
+#         view = super().as_view(**kwargs)
+#         return login_required(login_url='login')(view)
 
-    def get(self, request, *args, **kwargs):
+#     def get(self, request, *args, **kwargs):
         
         
         
-        countries = self.get_countries()
-        user_profile = request.user.profile
-        form = ProfileForm(instance=user_profile)
+#         countries = self.get_countries()
+#         user_profile = request.user.profile
+#         form = ProfileForm(instance=user_profile)
 
-        context = {'countries': countries, 'user_profile':user_profile,'form':form}
+#         context = {'countries': countries, 'user_profile':user_profile,'form':form}
 
-        updated_inner_html = render_to_string(self.template_name, context, request=request)
+#         updated_inner_html = render_to_string(self.template_name, context, request=request)
 
-        return HttpResponse(updated_inner_html)
+#         return HttpResponse(updated_inner_html)
         
 
-    def get_countries(self):
-        api_url = "https://www.universal-tutorial.com/api/countries/"
-        headers = {
-            "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7InVzZXJfZW1haWwiOiJhc2tAdW5pdmVyc2FsLXR1dG9yaWFsLmNvbSIsImFwaV90b2tlbiI6IlQ2VlBOUmZXbkxFbmdsMHd2djctZ1d2Y09KRHFPSkptc3ZoNkNOdGo5a3p1Z1RSYkhvdXVET1NXeTdzYmJzdG5taDAifSwiZXhwIjoxNzA1MTU2NjcyfQ.Kht4zIe8KwjVa8b6S6IYA3wN6gAg3c_Ak35AzYyNqQw",
-            "Accept": "application/json",
-        }
+#     def get_countries(self):
+#         api_url = "https://www.universal-tutorial.com/api/countries/"
+#         headers = {
+#             "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7InVzZXJfZW1haWwiOiJhc2tAdW5pdmVyc2FsLXR1dG9yaWFsLmNvbSIsImFwaV90b2tlbiI6IlQ2VlBOUmZXbkxFbmdsMHd2djctZ1d2Y09KRHFPSkptc3ZoNkNOdGo5a3p1Z1RSYkhvdXVET1NXeTdzYmJzdG5taDAifSwiZXhwIjoxNzA1MTU2NjcyfQ.Kht4zIe8KwjVa8b6S6IYA3wN6gAg3c_Ak35AzYyNqQw",
+#             "Accept": "application/json",
+#         }
 
-        response = requests.get(api_url, headers=headers)
-        # print(response)
-        if response.status_code == 200:
-            countries = response.json()
-            # print(countries)
-            return countries
-        else:
-            # Handle the error, for simplicity, raising an exception here
-            raise Exception(f"Failed to fetch countries. Status code: {response.status_code}")
+#         response = requests.get(api_url, headers=headers)
+#         # print(response)
+#         if response.status_code == 200:
+#             countries = response.json()
+#             # print(countries)
+#             return countries
+#         else:
+#             # Handle the error, for simplicity, raising an exception here
+#             raise Exception(f"Failed to fetch countries. Status code: {response.status_code}")
         
-class StateListView(View):
+# class StateListView(View):
 
-    template_name = 'users/htmx/states.html'
+#     template_name = 'users/htmx/states.html'
 
-    @classmethod
-    def as_view(cls, **kwargs):
-        view = super().as_view(**kwargs)
-        return login_required(login_url='login')(view)
+#     @classmethod
+#     def as_view(cls, **kwargs):
+#         view = super().as_view(**kwargs)
+#         return login_required(login_url='login')(view)
 
-    def get(self, request, country, *args, **kwargs):
+#     def get(self, request, country, *args, **kwargs):
 
-        print(request.META['HTTP_MYHEADER'])
-        if country and country != '__value__':
-            states = self.get_states(country)    
-        else:
-            states = self.get_states(request.GET.get('country'))
+#         print(request.META['HTTP_MYHEADER'])
+#         if country and country != '__value__':
+#             states = self.get_states(country)    
+#         else:
+#             states = self.get_states(request.GET.get('country'))
         
-        user_profile = request.user.profile
-        form = ProfileForm(instance=user_profile)
+#         user_profile = request.user.profile
+#         form = ProfileForm(instance=user_profile)
 
-        context = {'states': states, 'user_profile': user_profile,'form':form, 'header_value':request.META['HTTP_MYHEADER']}
+#         context = {'states': states, 'user_profile': user_profile,'form':form, 'header_value':request.META['HTTP_MYHEADER']}
 
-        updated_inner_html = render_to_string(self.template_name, context, request=request)
+#         updated_inner_html = render_to_string(self.template_name, context, request=request)
 
-        return HttpResponse(updated_inner_html)
+#         return HttpResponse(updated_inner_html)
 
-    def get_states(self, country):
-        api_url = f"https://www.universal-tutorial.com/api/states/{country.replace(' ', '%20')}"
-        headers = {
-            "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7InVzZXJfZW1haWwiOiJhc2tAdW5pdmVyc2FsLXR1dG9yaWFsLmNvbSIsImFwaV90b2tlbiI6IlQ2VlBOUmZXbkxFbmdsMHd2djctZ1d2Y09KRHFPSkptc3ZoNkNOdGo5a3p1Z1RSYkhvdXVET1NXeTdzYmJzdG5taDAifSwiZXhwIjoxNzA1MTU2NjcyfQ.Kht4zIe8KwjVa8b6S6IYA3wN6gAg3c_Ak35AzYyNqQw",
-            "Accept": "application/json",
-        }
+#     def get_states(self, country):
+#         api_url = f"https://www.universal-tutorial.com/api/states/{country.replace(' ', '%20')}"
+#         headers = {
+#             "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7InVzZXJfZW1haWwiOiJhc2tAdW5pdmVyc2FsLXR1dG9yaWFsLmNvbSIsImFwaV90b2tlbiI6IlQ2VlBOUmZXbkxFbmdsMHd2djctZ1d2Y09KRHFPSkptc3ZoNkNOdGo5a3p1Z1RSYkhvdXVET1NXeTdzYmJzdG5taDAifSwiZXhwIjoxNzA1MTU2NjcyfQ.Kht4zIe8KwjVa8b6S6IYA3wN6gAg3c_Ak35AzYyNqQw",
+#             "Accept": "application/json",
+#         }
 
-        response = requests.get(api_url, headers=headers)
+#         response = requests.get(api_url, headers=headers)
 
-        if response.status_code == 200:
-            states = response.json()
-            return states
-        else:
-            # Handle the error, for simplicity, raising an exception here
-            raise Exception(f"Failed to fetch states. Status code: {response.status_code}")
+#         if response.status_code == 200:
+#             states = response.json()
+#             return states
+#         else:
+#             # Handle the error, for simplicity, raising an exception here
+#             raise Exception(f"Failed to fetch states. Status code: {response.status_code}")
         
-class CityListView(View):
+# class CityListView(View):
 
-    template_name = 'users/htmx/cities.html'
+#     template_name = 'users/htmx/cities.html'
 
-    @classmethod
-    def as_view(cls, **kwargs):
-        view = super().as_view(**kwargs)
-        return login_required(login_url='login')(view)
+#     @classmethod
+#     def as_view(cls, **kwargs):
+#         view = super().as_view(**kwargs)
+#         return login_required(login_url='login')(view)
 
-    def get(self, request, state, *args, **kwargs):
-        # print()
-        if state and state != '__value__':
-            cities = self.get_cities(state)    
-        else:
-            cities = self.get_cities(request.GET.get('state'))
+#     def get(self, request, state, *args, **kwargs):
+#         # print()
+#         if state and state != '__value__':
+#             cities = self.get_cities(state)    
+#         else:
+#             cities = self.get_cities(request.GET.get('state'))
         
-        user_profile = request.user.profile
-        form = ProfileForm(instance=user_profile)
+#         user_profile = request.user.profile
+#         form = ProfileForm(instance=user_profile)
 
-        context = {'cities': cities, 'user_profile': user_profile,'form':form}
+#         context = {'cities': cities, 'user_profile': user_profile,'form':form}
 
-        updated_inner_html = render_to_string(self.template_name, context, request=request)
+#         updated_inner_html = render_to_string(self.template_name, context, request=request)
 
-        return HttpResponse(updated_inner_html)
+#         return HttpResponse(updated_inner_html)
 
-    def get_cities(self, state):
-        api_url = f"https://www.universal-tutorial.com/api/cities/{state.replace(' ', '%20')}"
-        headers = {
-            "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7InVzZXJfZW1haWwiOiJhc2tAdW5pdmVyc2FsLXR1dG9yaWFsLmNvbSIsImFwaV90b2tlbiI6IlQ2VlBOUmZXbkxFbmdsMHd2djctZ1d2Y09KRHFPSkptc3ZoNkNOdGo5a3p1Z1RSYkhvdXVET1NXeTdzYmJzdG5taDAifSwiZXhwIjoxNzA1MTU2NjcyfQ.Kht4zIe8KwjVa8b6S6IYA3wN6gAg3c_Ak35AzYyNqQw",
-            "Accept": "application/json",
-        }
+#     def get_cities(self, state):
+#         api_url = f"https://www.universal-tutorial.com/api/cities/{state.replace(' ', '%20')}"
+#         headers = {
+#             "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7InVzZXJfZW1haWwiOiJhc2tAdW5pdmVyc2FsLXR1dG9yaWFsLmNvbSIsImFwaV90b2tlbiI6IlQ2VlBOUmZXbkxFbmdsMHd2djctZ1d2Y09KRHFPSkptc3ZoNkNOdGo5a3p1Z1RSYkhvdXVET1NXeTdzYmJzdG5taDAifSwiZXhwIjoxNzA1MTU2NjcyfQ.Kht4zIe8KwjVa8b6S6IYA3wN6gAg3c_Ak35AzYyNqQw",
+#             "Accept": "application/json",
+#         }
 
-        response = requests.get(api_url, headers=headers)
+#         response = requests.get(api_url, headers=headers)
 
-        if response.status_code == 200:
-            cities = response.json()
-            return cities
-        else:
-            # Handle the error, for simplicity, raising an exception here
-            raise Exception(f"Failed to fetch cities. Status code: {response.status_code}")
+#         if response.status_code == 200:
+#             cities = response.json()
+#             return cities
+#         else:
+#             # Handle the error, for simplicity, raising an exception here
+#             raise Exception(f"Failed to fetch cities. Status code: {response.status_code}")
         
