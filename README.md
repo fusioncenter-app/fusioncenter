@@ -6,9 +6,8 @@ Connect, Learn, Dance. Empowering Dancers through Collaboration.
 
 - [Introduction](#introduction)
 - [Test Environment](#test-environment)
-- [Usage](#usage)
-- [Contributing](#contributing)
-- [License](#license)
+- [Discovery](#discovery)
+- [Features](#features)
 
 ## Introduction
 
@@ -42,13 +41,40 @@ Please note that this is a test environment. Do not use real or sensitive inform
 
 ## Discovery
 
-### Problem
+During our development process, we conducted interviews with four dance academies to understand their needs and pain points. Through these interviews, we gained valuable insights into the challenges faced by dance academies in managing their operations effectively. The key pain points identified are as follows:
 
-Traditional dance education lacks effective collaboration tools, making it challenging for dancers, academies, and instructors to connect and coordinate effectively.
+### Pain Points
+
+1. **Lack of Management System**: Many dance academies currently do not have a system in place to effectively manage their operations. This makes it challenging to efficiently assign dancers to sessions, especially with a variety of plans and schedules to consider.
+
+2. **Difficulty in Attendance Management**: There is a high level of irregularity in presentism, making it difficult for dance academies to track attendance and ensure accurate assistance records.
+
+3. **Payment Management**: Dance academies struggle to manage payments effectively. They need a solution that streamlines payment processes and provides transparency for both academy owners and dancers.
+
+4. **Session Visibility**: Dance academies want to showcase available sessions to dancers and staff, allowing them to easily see what is available and plan accordingly.
+
+5. **Calendar Management**: The ability to view and manage calendars is crucial for both staff and dancers. Dance academies need a solution that offers calendar functionality for scheduling and coordination purposes.
+
+6. **Flexible Plans**: Offering flexibility in plans is essential for dance academies. They need the ability to set different plans, such as monthly subscriptions or packages for a specific number of classes within a defined period.
 
 ### Solution
 
-FusionCenter provides a comprehensive platform that connects dance academies, professors, and dancers, enabling seamless collaboration and communication. With features such as session exploration, plan administration, and session management, FusionCenter revolutionizes dance education and empowers dancers worldwide.
+In response to these pain points, FusionCenter offers the following solutions:
+
+1. **Comprehensive System**: FusionCenter provides a centralized platform for all users, including dancers, professors, staff, and owners, to manage their sessions and interactions effectively.
+
+2. **User Management**: The platform allows professors, staff, and owners to manage session attendance directly from the app, ensuring accurate and efficient tracking of assistance.
+
+3. **Payment Tracking**: FusionCenter enables academies to monitor which plans have been paid for by participants, providing transparency and accountability in payment management.
+
+4. **Public Session Listings**: Dance academies can list their sessions publicly on the app, allowing participants to easily discover and register for classes.
+
+5. **Room Calendar Integration**: FusionCenter integrates room calendars for each academy site, enabling users to check room availability and schedule sessions accordingly.
+
+6. **Registration and Plan Selection**: Participants can register for classes directly through the app, with a list of available plans to choose from, providing convenience and flexibility in class selection.
+
+These solutions aim to streamline operations, enhance communication, and improve the overall experience for dance academies, professors, staff, and dancers using FusionCenter.
+
 
 ## Features
 
