@@ -79,7 +79,7 @@ These solutions aim to streamline operations, enhance communication, and improve
 
 ![Information Architecture](/_readme_images/information_architecture.png "Note: obtained from Miro")
 
-
+![Features](/_readme_images/features.png "Note: obtained from Miro")
 
 ## Features
 
