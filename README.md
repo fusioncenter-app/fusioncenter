@@ -82,8 +82,23 @@ These solutions aim to streamline operations, enhance communication, and improve
 
 ## Product Strategy
 
-![Schema](/_readme_images/product_schema.png "Note: obtained from Miro")
+FusionCenter aims to revolutionize dance education by providing a comprehensive platform that connects dance academies, instructors, staff, and participants. The platform streamlines operations, enhances collaboration, and improves the overall dance experience for all stakeholders.
 
+### Key Components
+
+1. **Institution Owners**: Owners are central administrators responsible for managing the academy's operations and strategic direction.
+
+2. **Sites and Spaces**: Sites represent physical locations like branches, while spaces are areas within sites where sessions are conducted.
+
+3. **Staff Permissions**: Staff members assist in administrative tasks, and owners assign permissions based on roles and responsibilities.
+
+4. **Instructors**: Instructors lead dance sessions, monitor participant progress, and ensure session quality.
+
+5. **Participants**: Participants enroll in sessions, choose plans, and attend based on interests and availability.
+
+These components form the foundation of FusionCenter, enabling effective management and collaboration among owners, staff, instructors, and participants.
+
+![Schema](/_readme_images/product_schema.png "Note: obtained from Miro")
 
 ## Features
 
