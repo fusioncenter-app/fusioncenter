@@ -76,7 +76,7 @@ In response to these pain points, FusionCenter offers the following solutions:
 These solutions aim to streamline operations, enhance communication, and improve the overall experience for dance academies, professors, staff, and dancers using FusionCenter.
 
 
-![Image Description](/_readme_images/your_image.png)
+![Interviews Notes](/_readme_images/interviews.png)
 
 
 ## Features
