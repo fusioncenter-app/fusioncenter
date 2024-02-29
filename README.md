@@ -7,6 +7,7 @@ Connect, Learn, Dance. Empowering Dancers through Collaboration.
 - [Introduction](#introduction)
 - [Test Environment](#test-environment)
 - [Discovery](#discovery)
+- [Product Strategy](#product-strategy)
 - [Features](#features)
 
 ## Introduction
@@ -79,10 +80,13 @@ These solutions aim to streamline operations, enhance communication, and improve
 
 ![Information Architecture](/_readme_images/information_architecture.png "Note: obtained from Miro")
 
-![Features](/_readme_images/features.png "Note: obtained from Miro")
+## Product Strategy
 
 ![Schema](/_readme_images/product_schema.png "Note: obtained from Miro")
 
+
 ## Features
+
+![Features](/_readme_images/features.png "Note: obtained from Miro")
 
 Describe the main features of FusionCenter, such as the landing page, profile page, authentication, and other epics.
