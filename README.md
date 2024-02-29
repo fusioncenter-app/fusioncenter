@@ -76,6 +76,9 @@ In response to these pain points, FusionCenter offers the following solutions:
 These solutions aim to streamline operations, enhance communication, and improve the overall experience for dance academies, professors, staff, and dancers using FusionCenter.
 
 
+![Image Description](/_readme_images/your_image.png)
+
+
 ## Features
 
 Describe the main features of FusionCenter, such as the landing page, profile page, authentication, and other epics.
