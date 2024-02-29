@@ -81,6 +81,8 @@ These solutions aim to streamline operations, enhance communication, and improve
 
 ![Features](/_readme_images/features.png "Note: obtained from Miro")
 
+![Schema](/_readme_images/product_schema.png "Note: obtained from Miro")
+
 ## Features
 
 Describe the main features of FusionCenter, such as the landing page, profile page, authentication, and other epics.
