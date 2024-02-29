@@ -6,8 +6,9 @@ Connect, Learn, Dance. Empowering Dancers through Collaboration.
 
 - [Introduction](#introduction)
 - [Test Environment](#test-environment)
-- [Discovery](#discovery)
-- [Features](#features)
+- [Usage](#usage)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Introduction
 
@@ -19,18 +20,23 @@ You can access our test environment to explore FusionCenter. Below are the crede
 
 ### Dancer
 
-- **Username:** dancer@example.com
-- **Password:** password
+- **Username:** participant1@gmail.com
+- **Password:** Admin123!
 
 ### Academy Owner
 
-- **Username:** owner@example.com
-- **Password:** password
+- **Username:** owner1@gmail.com
+- **Password:** Admin123!
+
+### Academy Staff
+
+- **Username:** staff1@gmail.com
+- **Password:** Admin123!
 
 ### Instructor
 
-- **Username:** instructor@example.com
-- **Password:** password
+- **Username:** instructor1@gmail.com
+- **Password:** Admin123!
 
 Please note that this is a test environment. Do not use real or sensitive information.
 
