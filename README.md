@@ -16,6 +16,8 @@ FusionCenter is a platform that revolutionizes dance education by connecting dan
 
 ## Test Environment
 
+You can access our test environment [here](https://fusioncenter.pythonanywhere.com/). Below are the credentials for different user roles:
+
 You can access our test environment to explore FusionCenter. Below are the credentials for different user roles:
 
 ### Dancer
