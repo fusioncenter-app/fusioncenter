@@ -103,5 +103,3 @@ These components form the foundation of FusionCenter, enabling effective managem
 ## Features
 
 ![Features](/_readme_images/features.png "Note: obtained from Miro")
-
-Describe the main features of FusionCenter, such as the landing page, profile page, authentication, and other epics.
