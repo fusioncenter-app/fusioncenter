@@ -57,7 +57,7 @@ During our development process, we conducted interviews with four dance academie
 
 6. **Flexible Plans**: Offering flexibility in plans is essential for dance academies. They need the ability to set different plans, such as monthly subscriptions or packages for a specific number of classes within a defined period.
 
-![Interviews Notes](/_readme_images/interviews.png "Note: This is a description or note about the image")
+![Interviews Notes](/_readme_images/interviews.png "Note: obtained from Miro")
 
 ### Solution
 
@@ -77,7 +77,7 @@ In response to these pain points, FusionCenter offers the following solutions:
 
 These solutions aim to streamline operations, enhance communication, and improve the overall experience for dance academies, professors, staff, and dancers using FusionCenter.
 
-
+![Information Architecture](/_readme_images/information_architecture.png "Note: obtained from Miro")
 
 
 
